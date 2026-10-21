@@ -7,7 +7,8 @@
     "rates": "All rates are decimals per year (0.0222 = 2.22% APY/APR as published by the source; APR vs APY is noted in `notes` where the source distinguishes).",
     "asOf": "ISO-8601 UTC timestamp or date of the source reading. Readings are point-in-time and will drift; re-snapshot before relying on them.",
     "nulls": "null means the value was not captured in this snapshot, not that it is zero.",
-    "gasUsd": "gasUnits x gasPriceGwei(planning) x 1e-9 x ethPriceUsd. `planning` is a deliberately conservative gas price (about the 30-day average), not the live spot price."
+    "gasUsd": "gasUnits x gasPriceGwei(planning) x 1e-9 x ethPriceUsd. `planning` is a deliberately conservative gas price (about the 30-day average), not the live spot price.",
+    "liquidation": "Protocol-level liquidation mechanics that are not per-market parameters (close factor, position-size thresholds, dust rules) live under costs.liquidation.<protocol>. Per-market liquidationThreshold / liquidationBonus stay in markets[]. Borrower loss on a liquidation = liquidationBonus x debt repaid."
   },
   "assets": [
     {
@@ -446,9 +447,33 @@
           "notes": "Positive funding = longs pay shorts (good for a hedged-carry short). Hyperliquid's funding formula includes a 0.01%/8h interest baseline, so a balanced book still pays shorts ~10.95% APR; realised averages are lower because of negative hours. Hyperliquid has run ~7pp above Binance on the same contract (https://fluxy.io/blog/perp-funding-almanac-2020-2026)."
         }
       }
+    },
+    "liquidation": {
+      "aaveV3": {
+        "rule": "position-size-dependent close factor",
+        "protocolVersion": "introduced in Aave v3.3.0; unchanged in the current main-branch source (latest release v3.7.0, 2026-08-05)",
+        "activatedOnAllInstances": "2025-02-24",
+        "activatedBy": "Aave governance proposal 252, which upgraded every active Aave v3 instance (incl. Ethereum Core, Arbitrum, Base) from v3.2 to v3.3",
+        "appliesTo": ["ethereum", "arbitrum", "base"],
+        "defaultCloseFactor": 0.5,
+        "maxCloseFactor": 1.0,
+        "fullCloseIfHealthFactorAtOrBelow": 0.95,
+        "fullCloseIfReserveCollateralOrDebtBelowUsd": 2000,
+        "minLeftoverAfterPartialLiquidationUsd": 1000,
+        "borrowerLossOnLiquidation": "liquidationBonus x debt repaid, taken from collateral (the protocol's share of the bonus does not change the borrower's loss). With a 100% close factor the entire debt is repaid in one call, so loss = liquidationBonus x entire debt and the position is closed, not halved.",
+        "source": "https://github.com/aave-dao/aave-v3-origin/blob/main/src/contracts/protocol/libraries/logic/LiquidationLogic.sol (MIN_BASE_MAX_CLOSE_FACTOR_THRESHOLD = 2000e8, MIN_LEFTOVER_BASE = threshold / 2, CLOSE_FACTOR_HF_THRESHOLD = 0.95e18, DEFAULT_LIQUIDATION_CLOSE_FACTOR = 50%); https://github.com/aave-dao/aave-v3-origin/blob/main/docs/3.3/Aave-v3.3-features.md (sections 2.2 and 2.3); https://aave.com/help/borrowing/liquidations; activation: https://governance.aave.com/t/bgd-aave-v3-3-feat-umbrella/20129/7 and https://vote.onaave.com/proposal/?ipfsHash=0x13c4f9441574b90e2210e9ca94a8632ba9d997eca6af66283932d3131d642894&proposalId=252; version history: https://github.com/aave-dao/aave-v3-origin/releases",
+        "asOf": "2026-10-21",
+        "notes": "Thresholds are in the pool's base currency (USD, 8 decimals) and are evaluated per reserve being liquidated, so an ETH-denominated debt drops into the full-close regime when ETH's USD price falls. A partial liquidation may not leave less than $1,000 of debt or of collateral (tx reverts: MustNotLeaveDust), so for positions with debt <= $2,000 the only legal liquidation is a complete one. BGD's stated rationale: at a 1% bonus a $2,000 position yields a $20 liquidator reward, the floor for economic liquidation under average gas. Consequence for this project: every loop modelled at $1,000 equity has no partial-liquidation cushion; see docs/economics-1k.md section 5.3. Reported to this snapshot by the architecture worker on 2026-10-21 and verified against the sources above."
+      }
     }
   },
   "sourcesIndex": [
+    "https://github.com/aave-dao/aave-v3-origin/blob/main/src/contracts/protocol/libraries/logic/LiquidationLogic.sol",
+    "https://github.com/aave-dao/aave-v3-origin/blob/main/docs/3.3/Aave-v3.3-features.md",
+    "https://aave.com/help/borrowing/liquidations",
+    "https://governance.aave.com/t/bgd-aave-v3-3-feat-umbrella/20129",
+    "https://vote.onaave.com/proposal/?ipfsHash=0x13c4f9441574b90e2210e9ca94a8632ba9d997eca6af66283932d3131d642894&proposalId=252",
+    "https://github.com/aave-dao/aave-v3-origin/releases",
     "https://lido.fi/how-lido-works/apr-and-rewards-calculator",
     "https://chartegy.com/data/series/LIDO_STAKING_RATE",
     "https://rocketpool.net/liquid-staking/what-can-i-earn",
