@@ -1,0 +1,21 @@
+{
+  "name": "@shadow-banking/core",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Consolidated balance-sheet model: disclosures, accounts, holdings by liquidity tier, liabilities, collateral, NAV, health factor, borrowing capacity, reserves, deployable capital.",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run --root ../.. packages/core"
+  },
+  "dependencies": {
+    "decimal.js": "^10.6.0",
+    "zod": "^3.25.76"
+  }
+}

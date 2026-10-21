@@ -1,0 +1,26 @@
+{
+  "name": "@shadow-banking/simulator",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Recursive collateralized borrowing simulator: per-loop economics, optimal stopping point, stress tests, dated market presets, CLI.",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "bin": {
+    "sim": "./src/cli.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run --root ../.. simulator",
+    "cli": "tsx src/cli.ts"
+  },
+  "dependencies": {
+    "@shadow-banking/core": "workspace:*",
+    "decimal.js": "^10.6.0",
+    "zod": "^3.25.76"
+  }
+}
