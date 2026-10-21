@@ -8,6 +8,17 @@ The full product specification lives in [`docs/spec.md`](docs/spec.md).
 
 ---
 
+## Documentation
+
+| Document | Spec deliverable | Contents |
+| --- | --- | --- |
+| [`docs/architecture.md`](docs/architecture.md) | §14.1 | Component map, data flow, trust boundaries, module responsibilities, domain model |
+| [`docs/integrations.md`](docs/integrations.md) | §14.2 | Inventory of account integrations, protocol interfaces, APIs, SDKs, and MCP servers, with sources and dates |
+| [`docs/risk-governor.md`](docs/risk-governor.md) | §14.8 | Monitored metrics, risk states, hard limits, veto semantics, emergency unwind playbooks, fail-safes, monitoring |
+| [`docs/implementation-plan.md`](docs/implementation-plan.md) | §14.9 | Milestones, deliverables, and exit criteria for the seven phases, with a dependency graph |
+
+---
+
 ## Product vision
 
 The user provides account connectivity, financial disclosures (income, expenses, assets, liabilities, liquidity needs, risk tolerance), and a seed deposit. The platform builds and manages a personal balance sheet designed to generate recurring yield, deploy capital efficiently, manage liabilities, and compound wealth over time.
