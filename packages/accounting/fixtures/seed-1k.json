@@ -1,0 +1,2526 @@
+{
+  "schemaVersion": 1,
+  "kind": "shadow-banking-ledger",
+  "format": "Single JSON document (or a directory of ledger.json + journal.jsonl + meta.json). Amounts are decimal strings. Journal is the audit trail; state is the reconstructed book.",
+  "display": {
+    "schemaVersion": 1,
+    "kind": "shadow-banking-ledger",
+    "meta": {
+      "currency": "USD",
+      "createdAt": "2026-01-01T00:00:00Z",
+      "label": "$1,000 seed fixture (paper book, 90 days)",
+      "defaultHurdleApy": "0.1",
+      "accounts": [
+        {
+          "id": "wallet",
+          "kind": "wallet",
+          "institution": "self-custody",
+          "network": "ethereum",
+          "custody": "self_custody_user",
+          "scope": "managed"
+        },
+        {
+          "id": "reserve",
+          "kind": "wallet",
+          "institution": "self-custody reserve",
+          "network": "ethereum",
+          "custody": "self_custody_user",
+          "scope": "managed"
+        },
+        {
+          "id": "aave",
+          "kind": "lending",
+          "institution": "Aave v3",
+          "network": "ethereum",
+          "custody": "self_custody_user",
+          "scope": "managed"
+        }
+      ],
+      "instruments": {
+        "USDC": {
+          "id": "USDC",
+          "symbol": "USDC",
+          "assetClass": "stablecoin",
+          "network": "ethereum",
+          "liquidityTier": "T0",
+          "isStable": true,
+          "isYieldBearing": false,
+          "collateralParams": null
+        },
+        "wstETH": {
+          "id": "wstETH",
+          "symbol": "wstETH",
+          "assetClass": "liquid_staking_token",
+          "network": "ethereum",
+          "liquidityTier": "T1",
+          "isStable": false,
+          "isYieldBearing": true,
+          "collateralParams": {
+            "ltv": "0.93",
+            "liquidationThreshold": "0.95",
+            "liquidationBonus": "0.01",
+            "eMode": true,
+            "eModeCategory": "ETH correlated"
+          }
+        }
+      }
+    },
+    "trialBalance": {
+      "cash": "233.9572",
+      "productive_assets": "0",
+      "collateral_assets": "815.6616",
+      "lending_assets": "100.62",
+      "other_assets": "0",
+      "borrow_principal": "150",
+      "accrued_interest": "0.9162411687664035247816933450209115",
+      "contributed_capital": "1000",
+      "withdrawals": "25",
+      "unrealized_pnl": "22.2259",
+      "staking_income": "4.3929",
+      "lending_income": "0.62",
+      "funding_income": "0.55",
+      "lp_income": "0.3",
+      "incentives": "0.75",
+      "realized_pnl": "0",
+      "fees": "3.6",
+      "financing_cost": "0.9162411687664035247816933450209115",
+      "funding_expense": "0",
+      "liquidation_loss": "0",
+      "other_loss": "0",
+      "operating_expense": "0"
+    },
+    "nav": "999.3225588312335964752183066549791",
+    "entries": [
+      {
+        "id": "e-0001",
+        "at": "2026-01-01T00:00:00Z",
+        "category": "equity",
+        "kind": "seed",
+        "source": "user",
+        "memo": "Seed equity 1000",
+        "lines": [
+          {
+            "account": "cash",
+            "side": "debit",
+            "amount": "1000",
+            "quantity": "1000",
+            "instrumentId": "USDC",
+            "venueAccountId": "wallet",
+            "holdingId": null,
+            "memo": null
+          },
+          {
+            "account": "contributed_capital",
+            "side": "credit",
+            "amount": "1000",
+            "quantity": null,
+            "instrumentId": null,
+            "venueAccountId": null,
+            "holdingId": null,
+            "memo": null
+          }
+        ],
+        "priceMark": null,
+        "instrumentId": null,
+        "intentHash": null
+      },
+      {
+        "id": "e-0002",
+        "at": "2026-01-01T00:00:00Z",
+        "category": "transfer",
+        "kind": "transfer",
+        "source": "manual",
+        "memo": "Set aside liquid reserve (inter-account; not profit)",
+        "lines": [
+          {
+            "account": "cash",
+            "side": "debit",
+            "amount": "200",
+            "quantity": "200",
+            "instrumentId": "USDC",
+            "venueAccountId": "reserve",
+            "holdingId": "h-0002",
+            "memo": null
+          },
+          {
+            "account": "cash",
+            "side": "credit",
+            "amount": "200",
+            "quantity": "200",
+            "instrumentId": "USDC",
+            "venueAccountId": "wallet",
+            "holdingId": "h-0001",
+            "memo": null
+          }
+        ],
+        "priceMark": null,
+        "instrumentId": null,
+        "intentHash": null
+      },
+      {
+        "id": "e-0003",
+        "at": "2026-01-01T00:00:00Z",
+        "category": "transfer",
+        "kind": "acquire_asset",
+        "source": "execution",
+        "memo": "Acquire 0.26 wstETH @ 3034.78",
+        "lines": [
+          {
+            "account": "productive_assets",
+            "side": "debit",
+            "amount": "789.0428",
+            "quantity": "0.26",
+            "instrumentId": "wstETH",
+            "venueAccountId": "aave",
+            "holdingId": "h-0003",
+            "memo": null
+          },
+          {
+            "account": "cash",
+            "side": "credit",
+            "amount": "789.0428",
+            "quantity": "789.0428",
+            "instrumentId": "USDC",
+            "venueAccountId": "wallet",
+            "holdingId": "h-0001",
+            "memo": null
+          }
+        ],
+        "priceMark": "3034.78",
+        "instrumentId": "wstETH",
+        "intentHash": null
+      },
+      {
+        "id": "e-0004",
+        "at": "2026-01-01T00:00:00Z",
+        "category": "expense",
+        "kind": "fee",
+        "source": "manual",
+        "memo": "Entry fee for wstETH",
+        "lines": [
+          {
+            "account": "fees",
+            "side": "debit",
+            "amount": "2.5",
+            "quantity": null,
+            "instrumentId": null,
+            "venueAccountId": null,
+            "holdingId": null,
+            "memo": null
+          },
+          {
+            "account": "cash",
+            "side": "credit",
+            "amount": "2.5",
+            "quantity": "2.5",
+            "instrumentId": "USDC",
+            "venueAccountId": null,
+            "holdingId": "h-0001",
+            "memo": null
+          }
+        ],
+        "priceMark": null,
+        "instrumentId": null,
+        "intentHash": null
+      },
+      {
+        "id": "e-0005",
+        "at": "2026-01-01T00:00:00Z",
+        "category": "transfer",
+        "kind": "pledge",
+        "source": "manual",
+        "memo": "Pledge wstETH as collateral",
+        "lines": [
+          {
+            "account": "collateral_assets",
+            "side": "debit",
+            "amount": "789.0428",
+            "quantity": "0.26",
+            "instrumentId": "wstETH",
+            "venueAccountId": null,
+            "holdingId": "h-0003",
+            "memo": null
+          },
+          {
+            "account": "productive_assets",
+            "side": "credit",
+            "amount": "789.0428",
+            "quantity": "0.26",
+            "instrumentId": "wstETH",
+            "venueAccountId": null,
+            "holdingId": "h-0003",
+            "memo": null
+          }
+        ],
+        "priceMark": null,
+        "instrumentId": "wstETH",
+        "intentHash": null
+      },
+      {
+        "id": "e-0006",
+        "at": "2026-01-01T00:00:00Z",
+        "category": "financing",
+        "kind": "borrow",
+        "source": "manual",
+        "memo": "Borrow 150 USDC (principal; not income)",
+        "lines": [
+          {
+            "account": "cash",
+            "side": "debit",
+            "amount": "150",
+            "quantity": "150",
+            "instrumentId": "USDC",
+            "venueAccountId": "wallet",
+            "holdingId": "h-0001",
+            "memo": null
+          },
+          {
+            "account": "borrow_principal",
+            "side": "credit",
+            "amount": "150",
+            "quantity": "150",
+            "instrumentId": "USDC",
+            "venueAccountId": null,
+            "holdingId": null,
+            "memo": null
+          }
+        ],
+        "priceMark": null,
+        "instrumentId": "USDC",
+        "intentHash": "fixture-borrow-150-usdc"
+      },
+      {
+        "id": "e-0007",
+        "at": "2026-01-01T00:00:00Z",
+        "category": "transfer",
+        "kind": "transfer",
+        "source": "manual",
+        "memo": "Park borrowed USDC in reserve (principal is not income)",
+        "lines": [
+          {
+            "account": "cash",
+            "side": "debit",
+            "amount": "150",
+            "quantity": "150",
+            "instrumentId": "USDC",
+            "venueAccountId": "reserve",
+            "holdingId": "h-0002",
+            "memo": null
+          },
+          {
+            "account": "cash",
+            "side": "credit",
+            "amount": "150",
+            "quantity": "150",
+            "instrumentId": "USDC",
+            "venueAccountId": "wallet",
+            "holdingId": "h-0001",
+            "memo": null
+          }
+        ],
+        "priceMark": null,
+        "instrumentId": null,
+        "intentHash": null
+      },
+      {
+        "id": "e-0008",
+        "at": "2026-01-01T00:00:00Z",
+        "category": "transfer",
+        "kind": "transfer",
+        "source": "manual",
+        "memo": "Move USDC to Aave to supply (reclass; not profit)",
+        "lines": [
+          {
+            "account": "cash",
+            "side": "debit",
+            "amount": "100",
+            "quantity": "100",
+            "instrumentId": "USDC",
+            "venueAccountId": "aave",
+            "holdingId": "h-0005",
+            "memo": null
+          },
+          {
+            "account": "cash",
+            "side": "credit",
+            "amount": "100",
+            "quantity": "100",
+            "instrumentId": "USDC",
+            "venueAccountId": "reserve",
+            "holdingId": "h-0002",
+            "memo": null
+          }
+        ],
+        "priceMark": null,
+        "instrumentId": null,
+        "intentHash": null
+      },
+      {
+        "id": "e-0009",
+        "at": "2026-01-01T00:00:00Z",
+        "category": "transfer",
+        "kind": "supply_lending",
+        "source": "manual",
+        "memo": "Supply USDC to lending market",
+        "lines": [
+          {
+            "account": "lending_assets",
+            "side": "debit",
+            "amount": "100",
+            "quantity": "100",
+            "instrumentId": "USDC",
+            "venueAccountId": null,
+            "holdingId": "h-0005",
+            "memo": null
+          },
+          {
+            "account": "cash",
+            "side": "credit",
+            "amount": "100",
+            "quantity": "100",
+            "instrumentId": "USDC",
+            "venueAccountId": null,
+            "holdingId": "h-0005",
+            "memo": null
+          }
+        ],
+        "priceMark": null,
+        "instrumentId": null,
+        "intentHash": null
+      },
+      {
+        "id": "e-0010",
+        "at": "2026-01-31T00:00:00Z",
+        "category": "valuation",
+        "kind": "mark",
+        "source": "manual",
+        "memo": "Mark wstETH 3034.78 → 3080",
+        "lines": [
+          {
+            "account": "collateral_assets",
+            "side": "debit",
+            "amount": "11.7572",
+            "quantity": null,
+            "instrumentId": "wstETH",
+            "venueAccountId": null,
+            "holdingId": null,
+            "memo": null
+          },
+          {
+            "account": "unrealized_pnl",
+            "side": "credit",
+            "amount": "11.7572",
+            "quantity": null,
+            "instrumentId": null,
+            "venueAccountId": null,
+            "holdingId": null,
+            "memo": null
+          }
+        ],
+        "priceMark": "3080",
+        "instrumentId": "wstETH",
+        "intentHash": null
+      },
+      {
+        "id": "e-0011",
+        "at": "2026-01-31T00:00:00Z",
+        "category": "income",
+        "kind": "staking",
+        "source": "manual",
+        "memo": "Staking reward credited as more wstETH",
+        "lines": [
+          {
+            "account": "collateral_assets",
+            "side": "debit",
+            "amount": "1.4784",
+            "quantity": "0.00048",
+            "instrumentId": "wstETH",
+            "venueAccountId": null,
+            "holdingId": "h-0003",
+            "memo": null
+          },
+          {
+            "account": "staking_income",
+            "side": "credit",
+            "amount": "1.4784",
+            "quantity": null,
+            "instrumentId": null,
+            "venueAccountId": null,
+            "holdingId": null,
+            "memo": null
+          }
+        ],
+        "priceMark": "3080",
+        "instrumentId": "wstETH",
+        "intentHash": null
+      },
+      {
+        "id": "e-0012",
+        "at": "2026-01-31T00:00:00Z",
+        "category": "income",
+        "kind": "lending",
+        "source": "manual",
+        "memo": "USDC supply interest",
+        "lines": [
+          {
+            "account": "lending_assets",
+            "side": "debit",
+            "amount": "0.21",
+            "quantity": "0.21",
+            "instrumentId": "USDC",
+            "venueAccountId": null,
+            "holdingId": "h-0005",
+            "memo": null
+          },
+          {
+            "account": "lending_income",
+            "side": "credit",
+            "amount": "0.21",
+            "quantity": null,
+            "instrumentId": null,
+            "venueAccountId": null,
+            "holdingId": null,
+            "memo": null
+          }
+        ],
+        "priceMark": "1",
+        "instrumentId": "USDC",
+        "intentHash": null
+      },
+      {
+        "id": "e-0013",
+        "at": "2026-01-31T00:00:00Z",
+        "category": "expense",
+        "kind": "accrue_interest",
+        "source": "manual",
+        "memo": "Accrue 30d interest on b-0004",
+        "lines": [
+          {
+            "account": "financing_cost",
+            "side": "debit",
+            "amount": "0.3082191780821917808219178082191781",
+            "quantity": null,
+            "instrumentId": null,
+            "venueAccountId": null,
+            "holdingId": null,
+            "memo": null
+          },
+          {
+            "account": "accrued_interest",
+            "side": "credit",
+            "amount": "0.3082191780821917808219178082191781",
+            "quantity": "0.3082191780821917808219178082191781",
+            "instrumentId": "USDC",
+            "venueAccountId": null,
+            "holdingId": null,
+            "memo": null
+          }
+        ],
+        "priceMark": null,
+        "instrumentId": "USDC",
+        "intentHash": null
+      },
+      {
+        "id": "e-0014",
+        "at": "2026-02-15T00:00:00Z",
+        "category": "income",
+        "kind": "funding",
+        "source": "manual",
+        "memo": "Funding received on hedge stub",
+        "lines": [
+          {
+            "account": "cash",
+            "side": "debit",
+            "amount": "0.55",
+            "quantity": "0.55",
+            "instrumentId": "USDC",
+            "venueAccountId": null,
+            "holdingId": "h-0001",
+            "memo": null
+          },
+          {
+            "account": "funding_income",
+            "side": "credit",
+            "amount": "0.55",
+            "quantity": null,
+            "instrumentId": null,
+            "venueAccountId": null,
+            "holdingId": null,
+            "memo": null
+          }
+        ],
+        "priceMark": "1",
+        "instrumentId": "USDC",
+        "intentHash": null
+      },
+      {
+        "id": "e-0015",
+        "at": "2026-02-15T00:00:00Z",
+        "category": "income",
+        "kind": "lp",
+        "source": "manual",
+        "memo": "LP fee income (small)",
+        "lines": [
+          {
+            "account": "cash",
+            "side": "debit",
+            "amount": "0.3",
+            "quantity": "0.3",
+            "instrumentId": "USDC",
+            "venueAccountId": null,
+            "holdingId": "h-0001",
+            "memo": null
+          },
+          {
+            "account": "lp_income",
+            "side": "credit",
+            "amount": "0.3",
+            "quantity": null,
+            "instrumentId": null,
+            "venueAccountId": null,
+            "holdingId": null,
+            "memo": null
+          }
+        ],
+        "priceMark": "1",
+        "instrumentId": "USDC",
+        "intentHash": null
+      },
+      {
+        "id": "e-0016",
+        "at": "2026-02-28T00:00:00Z",
+        "category": "valuation",
+        "kind": "mark",
+        "source": "manual",
+        "memo": "Mark wstETH 3080 → 3010",
+        "lines": [
+          {
+            "account": "collateral_assets",
+            "side": "credit",
+            "amount": "18.2336",
+            "quantity": null,
+            "instrumentId": "wstETH",
+            "venueAccountId": null,
+            "holdingId": null,
+            "memo": null
+          },
+          {
+            "account": "unrealized_pnl",
+            "side": "debit",
+            "amount": "18.2336",
+            "quantity": null,
+            "instrumentId": null,
+            "venueAccountId": null,
+            "holdingId": null,
+            "memo": null
+          }
+        ],
+        "priceMark": "3010",
+        "instrumentId": "wstETH",
+        "intentHash": null
+      },
+      {
+        "id": "e-0017",
+        "at": "2026-02-28T00:00:00Z",
+        "category": "income",
+        "kind": "staking",
+        "source": "manual",
+        "memo": "staking 1.3545",
+        "lines": [
+          {
+            "account": "collateral_assets",
+            "side": "debit",
+            "amount": "1.3545",
+            "quantity": "0.00045",
+            "instrumentId": "wstETH",
+            "venueAccountId": null,
+            "holdingId": "h-0003",
+            "memo": null
+          },
+          {
+            "account": "staking_income",
+            "side": "credit",
+            "amount": "1.3545",
+            "quantity": null,
+            "instrumentId": null,
+            "venueAccountId": null,
+            "holdingId": null,
+            "memo": null
+          }
+        ],
+        "priceMark": "3010",
+        "instrumentId": "wstETH",
+        "intentHash": null
+      },
+      {
+        "id": "e-0018",
+        "at": "2026-02-28T00:00:00Z",
+        "category": "income",
+        "kind": "lending",
+        "source": "manual",
+        "memo": "lending 0.19",
+        "lines": [
+          {
+            "account": "lending_assets",
+            "side": "debit",
+            "amount": "0.19",
+            "quantity": "0.19",
+            "instrumentId": "USDC",
+            "venueAccountId": null,
+            "holdingId": "h-0005",
+            "memo": null
+          },
+          {
+            "account": "lending_income",
+            "side": "credit",
+            "amount": "0.19",
+            "quantity": null,
+            "instrumentId": null,
+            "venueAccountId": null,
+            "holdingId": null,
+            "memo": null
+          }
+        ],
+        "priceMark": "1",
+        "instrumentId": "USDC",
+        "intentHash": null
+      },
+      {
+        "id": "e-0019",
+        "at": "2026-02-28T00:00:00Z",
+        "category": "expense",
+        "kind": "accrue_interest",
+        "source": "manual",
+        "memo": "Accrue 28d interest on b-0004",
+        "lines": [
+          {
+            "account": "financing_cost",
+            "side": "debit",
+            "amount": "0.2882623381497466691686995683993244",
+            "quantity": null,
+            "instrumentId": null,
+            "venueAccountId": null,
+            "holdingId": null,
+            "memo": null
+          },
+          {
+            "account": "accrued_interest",
+            "side": "credit",
+            "amount": "0.2882623381497466691686995683993244",
+            "quantity": "0.2882623381497466691686995683993244",
+            "instrumentId": "USDC",
+            "venueAccountId": null,
+            "holdingId": null,
+            "memo": null
+          }
+        ],
+        "priceMark": null,
+        "instrumentId": "USDC",
+        "intentHash": null
+      },
+      {
+        "id": "e-0020",
+        "at": "2026-03-01T00:00:00Z",
+        "category": "income",
+        "kind": "incentive",
+        "source": "manual",
+        "memo": "Protocol incentive",
+        "lines": [
+          {
+            "account": "cash",
+            "side": "debit",
+            "amount": "0.75",
+            "quantity": "0.75",
+            "instrumentId": "USDC",
+            "venueAccountId": null,
+            "holdingId": "h-0002",
+            "memo": null
+          },
+          {
+            "account": "incentives",
+            "side": "credit",
+            "amount": "0.75",
+            "quantity": null,
+            "instrumentId": null,
+            "venueAccountId": null,
+            "holdingId": null,
+            "memo": null
+          }
+        ],
+        "priceMark": "1",
+        "instrumentId": "USDC",
+        "intentHash": null
+      },
+      {
+        "id": "e-0021",
+        "at": "2026-03-01T00:00:00Z",
+        "category": "equity",
+        "kind": "withdrawal",
+        "source": "user",
+        "memo": "Withdrawal 25",
+        "lines": [
+          {
+            "account": "withdrawals",
+            "side": "debit",
+            "amount": "25",
+            "quantity": null,
+            "instrumentId": null,
+            "venueAccountId": null,
+            "holdingId": null,
+            "memo": null
+          },
+          {
+            "account": "cash",
+            "side": "credit",
+            "amount": "25",
+            "quantity": "25",
+            "instrumentId": "USDC",
+            "venueAccountId": "reserve",
+            "holdingId": "h-0002",
+            "memo": null
+          }
+        ],
+        "priceMark": null,
+        "instrumentId": null,
+        "intentHash": null
+      },
+      {
+        "id": "e-0022",
+        "at": "2026-03-31T00:00:00Z",
+        "category": "valuation",
+        "kind": "mark",
+        "source": "manual",
+        "memo": "Mark wstETH 3010 → 3120",
+        "lines": [
+          {
+            "account": "collateral_assets",
+            "side": "debit",
+            "amount": "28.7023",
+            "quantity": null,
+            "instrumentId": "wstETH",
+            "venueAccountId": null,
+            "holdingId": null,
+            "memo": null
+          },
+          {
+            "account": "unrealized_pnl",
+            "side": "credit",
+            "amount": "28.7023",
+            "quantity": null,
+            "instrumentId": null,
+            "venueAccountId": null,
+            "holdingId": null,
+            "memo": null
+          }
+        ],
+        "priceMark": "3120",
+        "instrumentId": "wstETH",
+        "intentHash": null
+      },
+      {
+        "id": "e-0023",
+        "at": "2026-03-31T00:00:00Z",
+        "category": "income",
+        "kind": "staking",
+        "source": "manual",
+        "memo": "staking 1.56",
+        "lines": [
+          {
+            "account": "collateral_assets",
+            "side": "debit",
+            "amount": "1.56",
+            "quantity": "0.0005",
+            "instrumentId": "wstETH",
+            "venueAccountId": null,
+            "holdingId": "h-0003",
+            "memo": null
+          },
+          {
+            "account": "staking_income",
+            "side": "credit",
+            "amount": "1.56",
+            "quantity": null,
+            "instrumentId": null,
+            "venueAccountId": null,
+            "holdingId": null,
+            "memo": null
+          }
+        ],
+        "priceMark": "3120",
+        "instrumentId": "wstETH",
+        "intentHash": null
+      },
+      {
+        "id": "e-0024",
+        "at": "2026-03-31T00:00:00Z",
+        "category": "income",
+        "kind": "lending",
+        "source": "manual",
+        "memo": "lending 0.22",
+        "lines": [
+          {
+            "account": "lending_assets",
+            "side": "debit",
+            "amount": "0.22",
+            "quantity": "0.22",
+            "instrumentId": "USDC",
+            "venueAccountId": null,
+            "holdingId": "h-0005",
+            "memo": null
+          },
+          {
+            "account": "lending_income",
+            "side": "credit",
+            "amount": "0.22",
+            "quantity": null,
+            "instrumentId": null,
+            "venueAccountId": null,
+            "holdingId": null,
+            "memo": null
+          }
+        ],
+        "priceMark": "1",
+        "instrumentId": "USDC",
+        "intentHash": null
+      },
+      {
+        "id": "e-0025",
+        "at": "2026-03-31T00:00:00Z",
+        "category": "expense",
+        "kind": "accrue_interest",
+        "source": "manual",
+        "memo": "Accrue 31d interest on b-0004",
+        "lines": [
+          {
+            "account": "financing_cost",
+            "side": "debit",
+            "amount": "0.319759652534465074791075968402409",
+            "quantity": null,
+            "instrumentId": null,
+            "venueAccountId": null,
+            "holdingId": null,
+            "memo": null
+          },
+          {
+            "account": "accrued_interest",
+            "side": "credit",
+            "amount": "0.319759652534465074791075968402409",
+            "quantity": "0.319759652534465074791075968402409",
+            "instrumentId": "USDC",
+            "venueAccountId": null,
+            "holdingId": null,
+            "memo": null
+          }
+        ],
+        "priceMark": null,
+        "instrumentId": "USDC",
+        "intentHash": null
+      },
+      {
+        "id": "e-0026",
+        "at": "2026-03-31T00:00:00Z",
+        "category": "expense",
+        "kind": "fee",
+        "source": "manual",
+        "memo": "Gas / tx fees",
+        "lines": [
+          {
+            "account": "fees",
+            "side": "debit",
+            "amount": "1.1",
+            "quantity": null,
+            "instrumentId": null,
+            "venueAccountId": null,
+            "holdingId": null,
+            "memo": null
+          },
+          {
+            "account": "cash",
+            "side": "credit",
+            "amount": "1.1",
+            "quantity": "1.1",
+            "instrumentId": "USDC",
+            "venueAccountId": null,
+            "holdingId": "h-0001",
+            "memo": null
+          }
+        ],
+        "priceMark": null,
+        "instrumentId": null,
+        "intentHash": null
+      }
+    ],
+    "holdings": [
+      {
+        "id": "h-0001",
+        "venueAccountId": "wallet",
+        "instrumentId": "USDC",
+        "quantity": "8.2072",
+        "costBasisUsd": "8.2072",
+        "role": "cash",
+        "collateralPositionId": null
+      },
+      {
+        "id": "h-0002",
+        "venueAccountId": "reserve",
+        "instrumentId": "USDC",
+        "quantity": "225.75",
+        "costBasisUsd": "225.75",
+        "role": "reserve",
+        "collateralPositionId": null
+      },
+      {
+        "id": "h-0003",
+        "venueAccountId": "aave",
+        "instrumentId": "wstETH",
+        "quantity": "0.26143",
+        "costBasisUsd": "793.4357",
+        "role": "collateral",
+        "collateralPositionId": "aave-wsteth-eth"
+      },
+      {
+        "id": "h-0005",
+        "venueAccountId": "aave",
+        "instrumentId": "USDC",
+        "quantity": "100.62",
+        "costBasisUsd": "100.62",
+        "role": "lending",
+        "collateralPositionId": null
+      }
+    ],
+    "borrows": [
+      {
+        "id": "b-0004",
+        "venueAccountId": "aave",
+        "instrumentId": "USDC",
+        "principal": "150",
+        "accruedInterest": "0.9162411687664035247816933450209115",
+        "apr": "0.025",
+        "priceMark": "1",
+        "venue": "Aave v3"
+      }
+    ],
+    "snapshots": [
+      {
+        "at": "2026-01-01T00:00:00Z",
+        "entryId": "e-0001",
+        "nav": "1000",
+        "shares": "1000",
+        "unitNav": "1",
+        "grossAssets": "1000",
+        "totalDebt": "0",
+        "deployed": "0",
+        "liquidReserves": "1000",
+        "netPnl": "0",
+        "realizedPnl": "0",
+        "unrealizedPnl": "0"
+      },
+      {
+        "at": "2026-01-01T00:00:00Z",
+        "entryId": "e-0002",
+        "nav": "1000",
+        "shares": "1000",
+        "unitNav": "1",
+        "grossAssets": "1000",
+        "totalDebt": "0",
+        "deployed": "0",
+        "liquidReserves": "1000",
+        "netPnl": "0",
+        "realizedPnl": "0",
+        "unrealizedPnl": "0"
+      },
+      {
+        "at": "2026-01-01T00:00:00Z",
+        "entryId": "e-0003",
+        "nav": "1000",
+        "shares": "1000",
+        "unitNav": "1",
+        "grossAssets": "1000",
+        "totalDebt": "0",
+        "deployed": "789.0428",
+        "liquidReserves": "210.9572",
+        "netPnl": "0",
+        "realizedPnl": "0",
+        "unrealizedPnl": "0"
+      },
+      {
+        "at": "2026-01-01T00:00:00Z",
+        "entryId": "e-0004",
+        "nav": "997.5",
+        "shares": "1000",
+        "unitNav": "0.9975",
+        "grossAssets": "997.5",
+        "totalDebt": "0",
+        "deployed": "789.0428",
+        "liquidReserves": "208.4572",
+        "netPnl": "-2.5",
+        "realizedPnl": "-2.5",
+        "unrealizedPnl": "0"
+      },
+      {
+        "at": "2026-01-01T00:00:00Z",
+        "entryId": "e-0005",
+        "nav": "997.5",
+        "shares": "1000",
+        "unitNav": "0.9975",
+        "grossAssets": "997.5",
+        "totalDebt": "0",
+        "deployed": "789.0428",
+        "liquidReserves": "208.4572",
+        "netPnl": "-2.5",
+        "realizedPnl": "-2.5",
+        "unrealizedPnl": "0"
+      },
+      {
+        "at": "2026-01-01T00:00:00Z",
+        "entryId": "e-0006",
+        "nav": "997.5",
+        "shares": "1000",
+        "unitNav": "0.9975",
+        "grossAssets": "1147.5",
+        "totalDebt": "150",
+        "deployed": "789.0428",
+        "liquidReserves": "358.4572",
+        "netPnl": "-2.5",
+        "realizedPnl": "-2.5",
+        "unrealizedPnl": "0"
+      },
+      {
+        "at": "2026-01-01T00:00:00Z",
+        "entryId": "e-0007",
+        "nav": "997.5",
+        "shares": "1000",
+        "unitNav": "0.9975",
+        "grossAssets": "1147.5",
+        "totalDebt": "150",
+        "deployed": "789.0428",
+        "liquidReserves": "358.4572",
+        "netPnl": "-2.5",
+        "realizedPnl": "-2.5",
+        "unrealizedPnl": "0"
+      },
+      {
+        "at": "2026-01-01T00:00:00Z",
+        "entryId": "e-0008",
+        "nav": "997.5",
+        "shares": "1000",
+        "unitNav": "0.9975",
+        "grossAssets": "1147.5",
+        "totalDebt": "150",
+        "deployed": "789.0428",
+        "liquidReserves": "358.4572",
+        "netPnl": "-2.5",
+        "realizedPnl": "-2.5",
+        "unrealizedPnl": "0"
+      },
+      {
+        "at": "2026-01-01T00:00:00Z",
+        "entryId": "e-0009",
+        "nav": "997.5",
+        "shares": "1000",
+        "unitNav": "0.9975",
+        "grossAssets": "1147.5",
+        "totalDebt": "150",
+        "deployed": "889.0428",
+        "liquidReserves": "258.4572",
+        "netPnl": "-2.5",
+        "realizedPnl": "-2.5",
+        "unrealizedPnl": "0"
+      },
+      {
+        "at": "2026-01-31T00:00:00Z",
+        "entryId": "e-0010",
+        "nav": "1009.2572",
+        "shares": "1000",
+        "unitNav": "1.0092572",
+        "grossAssets": "1159.2572",
+        "totalDebt": "150",
+        "deployed": "900.8",
+        "liquidReserves": "258.4572",
+        "netPnl": "9.2572",
+        "realizedPnl": "-2.5",
+        "unrealizedPnl": "11.7572"
+      },
+      {
+        "at": "2026-01-31T00:00:00Z",
+        "entryId": "e-0011",
+        "nav": "1010.7356",
+        "shares": "1000",
+        "unitNav": "1.0107356",
+        "grossAssets": "1160.7356",
+        "totalDebt": "150",
+        "deployed": "902.2784",
+        "liquidReserves": "258.4572",
+        "netPnl": "10.7356",
+        "realizedPnl": "-1.0216",
+        "unrealizedPnl": "11.7572"
+      },
+      {
+        "at": "2026-01-31T00:00:00Z",
+        "entryId": "e-0012",
+        "nav": "1010.9456",
+        "shares": "1000",
+        "unitNav": "1.0109456",
+        "grossAssets": "1160.9456",
+        "totalDebt": "150",
+        "deployed": "902.4884",
+        "liquidReserves": "258.4572",
+        "netPnl": "10.9456",
+        "realizedPnl": "-0.8116",
+        "unrealizedPnl": "11.7572"
+      },
+      {
+        "at": "2026-01-31T00:00:00Z",
+        "entryId": "e-0013",
+        "nav": "1010.637380821917808219178082191781",
+        "shares": "1000",
+        "unitNav": "1.010637380821917808219178082191781",
+        "grossAssets": "1160.9456",
+        "totalDebt": "150.3082191780821917808219178082192",
+        "deployed": "902.4884",
+        "liquidReserves": "258.4572",
+        "netPnl": "10.637380821917808219178082191781",
+        "realizedPnl": "-1.119819178082191780821917808219178",
+        "unrealizedPnl": "11.7572"
+      },
+      {
+        "at": "2026-02-15T00:00:00Z",
+        "entryId": "e-0014",
+        "nav": "1011.187380821917808219178082191781",
+        "shares": "1000",
+        "unitNav": "1.011187380821917808219178082191781",
+        "grossAssets": "1161.4956",
+        "totalDebt": "150.3082191780821917808219178082192",
+        "deployed": "902.4884",
+        "liquidReserves": "259.0072",
+        "netPnl": "11.187380821917808219178082191781",
+        "realizedPnl": "-0.569819178082191780821917808219178",
+        "unrealizedPnl": "11.7572"
+      },
+      {
+        "at": "2026-02-15T00:00:00Z",
+        "entryId": "e-0015",
+        "nav": "1011.487380821917808219178082191781",
+        "shares": "1000",
+        "unitNav": "1.011487380821917808219178082191781",
+        "grossAssets": "1161.7956",
+        "totalDebt": "150.3082191780821917808219178082192",
+        "deployed": "902.4884",
+        "liquidReserves": "259.3072",
+        "netPnl": "11.487380821917808219178082191781",
+        "realizedPnl": "-0.269819178082191780821917808219178",
+        "unrealizedPnl": "11.7572"
+      },
+      {
+        "at": "2026-02-28T00:00:00Z",
+        "entryId": "e-0016",
+        "nav": "993.2537808219178082191780821917808",
+        "shares": "1000",
+        "unitNav": "0.9932537808219178082191780821917808",
+        "grossAssets": "1143.562",
+        "totalDebt": "150.3082191780821917808219178082192",
+        "deployed": "884.2548",
+        "liquidReserves": "259.3072",
+        "netPnl": "-6.7462191780821917808219178082192",
+        "realizedPnl": "-0.269819178082191780821917808219178",
+        "unrealizedPnl": "-6.4764"
+      },
+      {
+        "at": "2026-02-28T00:00:00Z",
+        "entryId": "e-0017",
+        "nav": "994.6082808219178082191780821917808",
+        "shares": "1000",
+        "unitNav": "0.9946082808219178082191780821917808",
+        "grossAssets": "1144.9165",
+        "totalDebt": "150.3082191780821917808219178082192",
+        "deployed": "885.6093",
+        "liquidReserves": "259.3072",
+        "netPnl": "-5.3917191780821917808219178082192",
+        "realizedPnl": "1.084680821917808219178082191780822",
+        "unrealizedPnl": "-6.4764"
+      },
+      {
+        "at": "2026-02-28T00:00:00Z",
+        "entryId": "e-0018",
+        "nav": "994.7982808219178082191780821917808",
+        "shares": "1000",
+        "unitNav": "0.9947982808219178082191780821917808",
+        "grossAssets": "1145.1065",
+        "totalDebt": "150.3082191780821917808219178082192",
+        "deployed": "885.7993",
+        "liquidReserves": "259.3072",
+        "netPnl": "-5.2017191780821917808219178082192",
+        "realizedPnl": "1.274680821917808219178082191780822",
+        "unrealizedPnl": "-6.4764"
+      },
+      {
+        "at": "2026-02-28T00:00:00Z",
+        "entryId": "e-0019",
+        "nav": "994.5100184837680615500093826233815",
+        "shares": "1000",
+        "unitNav": "0.9945100184837680615500093826233815",
+        "grossAssets": "1145.1065",
+        "totalDebt": "150.5964815162319384499906173766185",
+        "deployed": "885.7993",
+        "liquidReserves": "259.3072",
+        "netPnl": "-5.4899815162319384499906173766185",
+        "realizedPnl": "0.986418483768061550009382623381498",
+        "unrealizedPnl": "-6.4764"
+      },
+      {
+        "at": "2026-03-01T00:00:00Z",
+        "entryId": "e-0020",
+        "nav": "995.2600184837680615500093826233815",
+        "shares": "1000",
+        "unitNav": "0.9952600184837680615500093826233815",
+        "grossAssets": "1145.8565",
+        "totalDebt": "150.5964815162319384499906173766185",
+        "deployed": "885.7993",
+        "liquidReserves": "260.0572",
+        "netPnl": "-4.7399815162319384499906173766185",
+        "realizedPnl": "1.736418483768061550009382623381498",
+        "unrealizedPnl": "-6.4764"
+      },
+      {
+        "at": "2026-03-01T00:00:00Z",
+        "entryId": "e-0021",
+        "nav": "970.2600184837680615500093826233815",
+        "shares": "974.8809361014156612590549849904769",
+        "unitNav": "0.9952600184837680615500093826233815",
+        "grossAssets": "1120.8565",
+        "totalDebt": "150.5964815162319384499906173766185",
+        "deployed": "885.7993",
+        "liquidReserves": "235.0572",
+        "netPnl": "-4.7399815162319384499906173766185",
+        "realizedPnl": "1.736418483768061550009382623381498",
+        "unrealizedPnl": "-6.4764"
+      },
+      {
+        "at": "2026-03-31T00:00:00Z",
+        "entryId": "e-0022",
+        "nav": "998.9623184837680615500093826233815",
+        "shares": "974.8809361014156612590549849904769",
+        "unitNav": "1.0247018702393081197623292059744",
+        "grossAssets": "1149.5588",
+        "totalDebt": "150.5964815162319384499906173766185",
+        "deployed": "914.5016",
+        "liquidReserves": "235.0572",
+        "netPnl": "23.9623184837680615500093826233815",
+        "realizedPnl": "1.736418483768061550009382623381498",
+        "unrealizedPnl": "22.2259"
+      },
+      {
+        "at": "2026-03-31T00:00:00Z",
+        "entryId": "e-0023",
+        "nav": "1000.522318483768061550009382623382",
+        "shares": "974.8809361014156612590549849904769",
+        "unitNav": "1.026302065650081559201371335853455",
+        "grossAssets": "1151.1188",
+        "totalDebt": "150.5964815162319384499906173766185",
+        "deployed": "916.0616",
+        "liquidReserves": "235.0572",
+        "netPnl": "25.522318483768061550009382623382",
+        "realizedPnl": "3.296418483768061550009382623381498",
+        "unrealizedPnl": "22.2259"
+      },
+      {
+        "at": "2026-03-31T00:00:00Z",
+        "entryId": "e-0024",
+        "nav": "1000.742318483768061550009382623382",
+        "shares": "974.8809361014156612590549849904769",
+        "unitNav": "1.026527734233652172455595225964604",
+        "grossAssets": "1151.3388",
+        "totalDebt": "150.5964815162319384499906173766185",
+        "deployed": "916.2816",
+        "liquidReserves": "235.0572",
+        "netPnl": "25.742318483768061550009382623382",
+        "realizedPnl": "3.516418483768061550009382623381498",
+        "unrealizedPnl": "22.2259"
+      },
+      {
+        "at": "2026-03-31T00:00:00Z",
+        "entryId": "e-0025",
+        "nav": "1000.422558831233596475218306654979",
+        "shares": "974.8809361014156612590549849904769",
+        "unitNav": "1.026199735561513607964716668589797",
+        "grossAssets": "1151.3388",
+        "totalDebt": "150.9162411687664035247816933450209",
+        "deployed": "916.2816",
+        "liquidReserves": "235.0572",
+        "netPnl": "25.422558831233596475218306654979",
+        "realizedPnl": "3.196658831233596475218306654979088",
+        "unrealizedPnl": "22.2259"
+      },
+      {
+        "at": "2026-03-31T00:00:00Z",
+        "entryId": "e-0026",
+        "nav": "999.3225588312335964752183066549791",
+        "shares": "974.8809361014156612590549849904769",
+        "unitNav": "1.025071392643660541693597218034053",
+        "grossAssets": "1150.2388",
+        "totalDebt": "150.9162411687664035247816933450209",
+        "deployed": "916.2816",
+        "liquidReserves": "233.9572",
+        "netPnl": "24.3225588312335964752183066549791",
+        "realizedPnl": "2.096658831233596475218306654979088",
+        "unrealizedPnl": "22.2259"
+      }
+    ]
+  },
+  "state": {
+    "meta": {
+      "currency": "USD",
+      "createdAt": "2026-01-01T00:00:00Z",
+      "label": "$1,000 seed fixture (paper book, 90 days)",
+      "defaultHurdleApy": "0.1",
+      "accounts": [
+        {
+          "id": "wallet",
+          "kind": "wallet",
+          "institution": "self-custody",
+          "network": "ethereum",
+          "custody": "self_custody_user",
+          "scope": "managed"
+        },
+        {
+          "id": "reserve",
+          "kind": "wallet",
+          "institution": "self-custody reserve",
+          "network": "ethereum",
+          "custody": "self_custody_user",
+          "scope": "managed"
+        },
+        {
+          "id": "aave",
+          "kind": "lending",
+          "institution": "Aave v3",
+          "network": "ethereum",
+          "custody": "self_custody_user",
+          "scope": "managed"
+        }
+      ],
+      "instruments": {
+        "USDC": {
+          "id": "USDC",
+          "symbol": "USDC",
+          "assetClass": "stablecoin",
+          "network": "ethereum",
+          "liquidityTier": "T0",
+          "isStable": true,
+          "isYieldBearing": false
+        },
+        "wstETH": {
+          "id": "wstETH",
+          "symbol": "wstETH",
+          "assetClass": "liquid_staking_token",
+          "network": "ethereum",
+          "liquidityTier": "T1",
+          "isStable": false,
+          "isYieldBearing": true,
+          "collateralParams": {
+            "ltv": "0.93",
+            "liquidationThreshold": "0.95",
+            "liquidationBonus": "0.01",
+            "eMode": true,
+            "eModeCategory": "ETH correlated"
+          }
+        }
+      }
+    },
+    "entries": [
+      {
+        "id": "e-0001",
+        "at": "2026-01-01T00:00:00Z",
+        "category": "equity",
+        "kind": "seed",
+        "source": "user",
+        "memo": "Seed equity 1000",
+        "lines": [
+          {
+            "account": "cash",
+            "side": "debit",
+            "amount": "1000",
+            "quantity": "1000",
+            "instrumentId": "USDC",
+            "venueAccountId": "wallet"
+          },
+          {
+            "account": "contributed_capital",
+            "side": "credit",
+            "amount": "1000"
+          }
+        ]
+      },
+      {
+        "id": "e-0002",
+        "at": "2026-01-01T00:00:00Z",
+        "category": "transfer",
+        "kind": "transfer",
+        "source": "manual",
+        "memo": "Set aside liquid reserve (inter-account; not profit)",
+        "lines": [
+          {
+            "account": "cash",
+            "side": "debit",
+            "amount": "200",
+            "quantity": "200",
+            "instrumentId": "USDC",
+            "venueAccountId": "reserve",
+            "holdingId": "h-0002"
+          },
+          {
+            "account": "cash",
+            "side": "credit",
+            "amount": "200",
+            "quantity": "200",
+            "instrumentId": "USDC",
+            "venueAccountId": "wallet",
+            "holdingId": "h-0001"
+          }
+        ]
+      },
+      {
+        "id": "e-0003",
+        "at": "2026-01-01T00:00:00Z",
+        "category": "transfer",
+        "kind": "acquire_asset",
+        "source": "execution",
+        "memo": "Acquire 0.26 wstETH @ 3034.78",
+        "lines": [
+          {
+            "account": "productive_assets",
+            "side": "debit",
+            "amount": "789.0428",
+            "quantity": "0.26",
+            "instrumentId": "wstETH",
+            "venueAccountId": "aave",
+            "holdingId": "h-0003"
+          },
+          {
+            "account": "cash",
+            "side": "credit",
+            "amount": "789.0428",
+            "quantity": "789.0428",
+            "instrumentId": "USDC",
+            "venueAccountId": "wallet",
+            "holdingId": "h-0001"
+          }
+        ],
+        "priceMark": "3034.78",
+        "instrumentId": "wstETH"
+      },
+      {
+        "id": "e-0004",
+        "at": "2026-01-01T00:00:00Z",
+        "category": "expense",
+        "kind": "fee",
+        "source": "manual",
+        "memo": "Entry fee for wstETH",
+        "lines": [
+          {
+            "account": "fees",
+            "side": "debit",
+            "amount": "2.5"
+          },
+          {
+            "account": "cash",
+            "side": "credit",
+            "amount": "2.5",
+            "quantity": "2.5",
+            "instrumentId": "USDC",
+            "holdingId": "h-0001"
+          }
+        ]
+      },
+      {
+        "id": "e-0005",
+        "at": "2026-01-01T00:00:00Z",
+        "category": "transfer",
+        "kind": "pledge",
+        "source": "manual",
+        "memo": "Pledge wstETH as collateral",
+        "lines": [
+          {
+            "account": "collateral_assets",
+            "side": "debit",
+            "amount": "789.0428",
+            "quantity": "0.26",
+            "instrumentId": "wstETH",
+            "holdingId": "h-0003"
+          },
+          {
+            "account": "productive_assets",
+            "side": "credit",
+            "amount": "789.0428",
+            "quantity": "0.26",
+            "instrumentId": "wstETH",
+            "holdingId": "h-0003"
+          }
+        ],
+        "instrumentId": "wstETH"
+      },
+      {
+        "id": "e-0006",
+        "at": "2026-01-01T00:00:00Z",
+        "category": "financing",
+        "kind": "borrow",
+        "source": "manual",
+        "memo": "Borrow 150 USDC (principal; not income)",
+        "lines": [
+          {
+            "account": "cash",
+            "side": "debit",
+            "amount": "150",
+            "quantity": "150",
+            "instrumentId": "USDC",
+            "venueAccountId": "wallet",
+            "holdingId": "h-0001"
+          },
+          {
+            "account": "borrow_principal",
+            "side": "credit",
+            "amount": "150",
+            "quantity": "150",
+            "instrumentId": "USDC"
+          }
+        ],
+        "instrumentId": "USDC",
+        "intentHash": "fixture-borrow-150-usdc"
+      },
+      {
+        "id": "e-0007",
+        "at": "2026-01-01T00:00:00Z",
+        "category": "transfer",
+        "kind": "transfer",
+        "source": "manual",
+        "memo": "Park borrowed USDC in reserve (principal is not income)",
+        "lines": [
+          {
+            "account": "cash",
+            "side": "debit",
+            "amount": "150",
+            "quantity": "150",
+            "instrumentId": "USDC",
+            "venueAccountId": "reserve",
+            "holdingId": "h-0002"
+          },
+          {
+            "account": "cash",
+            "side": "credit",
+            "amount": "150",
+            "quantity": "150",
+            "instrumentId": "USDC",
+            "venueAccountId": "wallet",
+            "holdingId": "h-0001"
+          }
+        ]
+      },
+      {
+        "id": "e-0008",
+        "at": "2026-01-01T00:00:00Z",
+        "category": "transfer",
+        "kind": "transfer",
+        "source": "manual",
+        "memo": "Move USDC to Aave to supply (reclass; not profit)",
+        "lines": [
+          {
+            "account": "cash",
+            "side": "debit",
+            "amount": "100",
+            "quantity": "100",
+            "instrumentId": "USDC",
+            "venueAccountId": "aave",
+            "holdingId": "h-0005"
+          },
+          {
+            "account": "cash",
+            "side": "credit",
+            "amount": "100",
+            "quantity": "100",
+            "instrumentId": "USDC",
+            "venueAccountId": "reserve",
+            "holdingId": "h-0002"
+          }
+        ]
+      },
+      {
+        "id": "e-0009",
+        "at": "2026-01-01T00:00:00Z",
+        "category": "transfer",
+        "kind": "supply_lending",
+        "source": "manual",
+        "memo": "Supply USDC to lending market",
+        "lines": [
+          {
+            "account": "lending_assets",
+            "side": "debit",
+            "amount": "100",
+            "quantity": "100",
+            "instrumentId": "USDC",
+            "holdingId": "h-0005"
+          },
+          {
+            "account": "cash",
+            "side": "credit",
+            "amount": "100",
+            "quantity": "100",
+            "instrumentId": "USDC",
+            "holdingId": "h-0005"
+          }
+        ]
+      },
+      {
+        "id": "e-0010",
+        "at": "2026-01-31T00:00:00Z",
+        "category": "valuation",
+        "kind": "mark",
+        "source": "manual",
+        "memo": "Mark wstETH 3034.78 → 3080",
+        "lines": [
+          {
+            "account": "collateral_assets",
+            "side": "debit",
+            "amount": "11.7572",
+            "instrumentId": "wstETH"
+          },
+          {
+            "account": "unrealized_pnl",
+            "side": "credit",
+            "amount": "11.7572"
+          }
+        ],
+        "priceMark": "3080",
+        "instrumentId": "wstETH"
+      },
+      {
+        "id": "e-0011",
+        "at": "2026-01-31T00:00:00Z",
+        "category": "income",
+        "kind": "staking",
+        "source": "manual",
+        "memo": "Staking reward credited as more wstETH",
+        "lines": [
+          {
+            "account": "collateral_assets",
+            "side": "debit",
+            "amount": "1.4784",
+            "quantity": "0.00048",
+            "instrumentId": "wstETH",
+            "holdingId": "h-0003"
+          },
+          {
+            "account": "staking_income",
+            "side": "credit",
+            "amount": "1.4784"
+          }
+        ],
+        "priceMark": "3080",
+        "instrumentId": "wstETH"
+      },
+      {
+        "id": "e-0012",
+        "at": "2026-01-31T00:00:00Z",
+        "category": "income",
+        "kind": "lending",
+        "source": "manual",
+        "memo": "USDC supply interest",
+        "lines": [
+          {
+            "account": "lending_assets",
+            "side": "debit",
+            "amount": "0.21",
+            "quantity": "0.21",
+            "instrumentId": "USDC",
+            "holdingId": "h-0005"
+          },
+          {
+            "account": "lending_income",
+            "side": "credit",
+            "amount": "0.21"
+          }
+        ],
+        "priceMark": "1",
+        "instrumentId": "USDC"
+      },
+      {
+        "id": "e-0013",
+        "at": "2026-01-31T00:00:00Z",
+        "category": "expense",
+        "kind": "accrue_interest",
+        "source": "manual",
+        "memo": "Accrue 30d interest on b-0004",
+        "lines": [
+          {
+            "account": "financing_cost",
+            "side": "debit",
+            "amount": "0.3082191780821917808219178082191781"
+          },
+          {
+            "account": "accrued_interest",
+            "side": "credit",
+            "amount": "0.3082191780821917808219178082191781",
+            "quantity": "0.3082191780821917808219178082191781",
+            "instrumentId": "USDC"
+          }
+        ],
+        "instrumentId": "USDC"
+      },
+      {
+        "id": "e-0014",
+        "at": "2026-02-15T00:00:00Z",
+        "category": "income",
+        "kind": "funding",
+        "source": "manual",
+        "memo": "Funding received on hedge stub",
+        "lines": [
+          {
+            "account": "cash",
+            "side": "debit",
+            "amount": "0.55",
+            "quantity": "0.55",
+            "instrumentId": "USDC",
+            "holdingId": "h-0001"
+          },
+          {
+            "account": "funding_income",
+            "side": "credit",
+            "amount": "0.55"
+          }
+        ],
+        "priceMark": "1",
+        "instrumentId": "USDC"
+      },
+      {
+        "id": "e-0015",
+        "at": "2026-02-15T00:00:00Z",
+        "category": "income",
+        "kind": "lp",
+        "source": "manual",
+        "memo": "LP fee income (small)",
+        "lines": [
+          {
+            "account": "cash",
+            "side": "debit",
+            "amount": "0.3",
+            "quantity": "0.3",
+            "instrumentId": "USDC",
+            "holdingId": "h-0001"
+          },
+          {
+            "account": "lp_income",
+            "side": "credit",
+            "amount": "0.3"
+          }
+        ],
+        "priceMark": "1",
+        "instrumentId": "USDC"
+      },
+      {
+        "id": "e-0016",
+        "at": "2026-02-28T00:00:00Z",
+        "category": "valuation",
+        "kind": "mark",
+        "source": "manual",
+        "memo": "Mark wstETH 3080 → 3010",
+        "lines": [
+          {
+            "account": "collateral_assets",
+            "side": "credit",
+            "amount": "18.2336",
+            "instrumentId": "wstETH"
+          },
+          {
+            "account": "unrealized_pnl",
+            "side": "debit",
+            "amount": "18.2336"
+          }
+        ],
+        "priceMark": "3010",
+        "instrumentId": "wstETH"
+      },
+      {
+        "id": "e-0017",
+        "at": "2026-02-28T00:00:00Z",
+        "category": "income",
+        "kind": "staking",
+        "source": "manual",
+        "memo": "staking 1.3545",
+        "lines": [
+          {
+            "account": "collateral_assets",
+            "side": "debit",
+            "amount": "1.3545",
+            "quantity": "0.00045",
+            "instrumentId": "wstETH",
+            "holdingId": "h-0003"
+          },
+          {
+            "account": "staking_income",
+            "side": "credit",
+            "amount": "1.3545"
+          }
+        ],
+        "priceMark": "3010",
+        "instrumentId": "wstETH"
+      },
+      {
+        "id": "e-0018",
+        "at": "2026-02-28T00:00:00Z",
+        "category": "income",
+        "kind": "lending",
+        "source": "manual",
+        "memo": "lending 0.19",
+        "lines": [
+          {
+            "account": "lending_assets",
+            "side": "debit",
+            "amount": "0.19",
+            "quantity": "0.19",
+            "instrumentId": "USDC",
+            "holdingId": "h-0005"
+          },
+          {
+            "account": "lending_income",
+            "side": "credit",
+            "amount": "0.19"
+          }
+        ],
+        "priceMark": "1",
+        "instrumentId": "USDC"
+      },
+      {
+        "id": "e-0019",
+        "at": "2026-02-28T00:00:00Z",
+        "category": "expense",
+        "kind": "accrue_interest",
+        "source": "manual",
+        "memo": "Accrue 28d interest on b-0004",
+        "lines": [
+          {
+            "account": "financing_cost",
+            "side": "debit",
+            "amount": "0.2882623381497466691686995683993244"
+          },
+          {
+            "account": "accrued_interest",
+            "side": "credit",
+            "amount": "0.2882623381497466691686995683993244",
+            "quantity": "0.2882623381497466691686995683993244",
+            "instrumentId": "USDC"
+          }
+        ],
+        "instrumentId": "USDC"
+      },
+      {
+        "id": "e-0020",
+        "at": "2026-03-01T00:00:00Z",
+        "category": "income",
+        "kind": "incentive",
+        "source": "manual",
+        "memo": "Protocol incentive",
+        "lines": [
+          {
+            "account": "cash",
+            "side": "debit",
+            "amount": "0.75",
+            "quantity": "0.75",
+            "instrumentId": "USDC",
+            "holdingId": "h-0002"
+          },
+          {
+            "account": "incentives",
+            "side": "credit",
+            "amount": "0.75"
+          }
+        ],
+        "priceMark": "1",
+        "instrumentId": "USDC"
+      },
+      {
+        "id": "e-0021",
+        "at": "2026-03-01T00:00:00Z",
+        "category": "equity",
+        "kind": "withdrawal",
+        "source": "user",
+        "memo": "Withdrawal 25",
+        "lines": [
+          {
+            "account": "withdrawals",
+            "side": "debit",
+            "amount": "25"
+          },
+          {
+            "account": "cash",
+            "side": "credit",
+            "amount": "25",
+            "quantity": "25",
+            "instrumentId": "USDC",
+            "venueAccountId": "reserve",
+            "holdingId": "h-0002"
+          }
+        ]
+      },
+      {
+        "id": "e-0022",
+        "at": "2026-03-31T00:00:00Z",
+        "category": "valuation",
+        "kind": "mark",
+        "source": "manual",
+        "memo": "Mark wstETH 3010 → 3120",
+        "lines": [
+          {
+            "account": "collateral_assets",
+            "side": "debit",
+            "amount": "28.7023",
+            "instrumentId": "wstETH"
+          },
+          {
+            "account": "unrealized_pnl",
+            "side": "credit",
+            "amount": "28.7023"
+          }
+        ],
+        "priceMark": "3120",
+        "instrumentId": "wstETH"
+      },
+      {
+        "id": "e-0023",
+        "at": "2026-03-31T00:00:00Z",
+        "category": "income",
+        "kind": "staking",
+        "source": "manual",
+        "memo": "staking 1.56",
+        "lines": [
+          {
+            "account": "collateral_assets",
+            "side": "debit",
+            "amount": "1.56",
+            "quantity": "0.0005",
+            "instrumentId": "wstETH",
+            "holdingId": "h-0003"
+          },
+          {
+            "account": "staking_income",
+            "side": "credit",
+            "amount": "1.56"
+          }
+        ],
+        "priceMark": "3120",
+        "instrumentId": "wstETH"
+      },
+      {
+        "id": "e-0024",
+        "at": "2026-03-31T00:00:00Z",
+        "category": "income",
+        "kind": "lending",
+        "source": "manual",
+        "memo": "lending 0.22",
+        "lines": [
+          {
+            "account": "lending_assets",
+            "side": "debit",
+            "amount": "0.22",
+            "quantity": "0.22",
+            "instrumentId": "USDC",
+            "holdingId": "h-0005"
+          },
+          {
+            "account": "lending_income",
+            "side": "credit",
+            "amount": "0.22"
+          }
+        ],
+        "priceMark": "1",
+        "instrumentId": "USDC"
+      },
+      {
+        "id": "e-0025",
+        "at": "2026-03-31T00:00:00Z",
+        "category": "expense",
+        "kind": "accrue_interest",
+        "source": "manual",
+        "memo": "Accrue 31d interest on b-0004",
+        "lines": [
+          {
+            "account": "financing_cost",
+            "side": "debit",
+            "amount": "0.319759652534465074791075968402409"
+          },
+          {
+            "account": "accrued_interest",
+            "side": "credit",
+            "amount": "0.319759652534465074791075968402409",
+            "quantity": "0.319759652534465074791075968402409",
+            "instrumentId": "USDC"
+          }
+        ],
+        "instrumentId": "USDC"
+      },
+      {
+        "id": "e-0026",
+        "at": "2026-03-31T00:00:00Z",
+        "category": "expense",
+        "kind": "fee",
+        "source": "manual",
+        "memo": "Gas / tx fees",
+        "lines": [
+          {
+            "account": "fees",
+            "side": "debit",
+            "amount": "1.1"
+          },
+          {
+            "account": "cash",
+            "side": "credit",
+            "amount": "1.1",
+            "quantity": "1.1",
+            "instrumentId": "USDC",
+            "holdingId": "h-0001"
+          }
+        ]
+      }
+    ],
+    "holdings": [
+      {
+        "id": "h-0001",
+        "venueAccountId": "wallet",
+        "instrumentId": "USDC",
+        "quantity": "8.2072",
+        "costBasisUsd": "8.2072",
+        "role": "cash"
+      },
+      {
+        "id": "h-0002",
+        "venueAccountId": "reserve",
+        "instrumentId": "USDC",
+        "quantity": "225.75",
+        "costBasisUsd": "225.75",
+        "role": "reserve"
+      },
+      {
+        "id": "h-0003",
+        "venueAccountId": "aave",
+        "instrumentId": "wstETH",
+        "quantity": "0.26143",
+        "costBasisUsd": "793.4357",
+        "role": "collateral",
+        "collateralPositionId": "aave-wsteth-eth"
+      },
+      {
+        "id": "h-0005",
+        "venueAccountId": "aave",
+        "instrumentId": "USDC",
+        "quantity": "100.62",
+        "costBasisUsd": "100.62",
+        "role": "lending"
+      }
+    ],
+    "borrows": [
+      {
+        "id": "b-0004",
+        "venueAccountId": "aave",
+        "instrumentId": "USDC",
+        "principal": "150",
+        "accruedInterest": "0.9162411687664035247816933450209115",
+        "apr": "0.025",
+        "priceMark": "1",
+        "venue": "Aave v3"
+      }
+    ],
+    "priceMarks": {
+      "USDC": "1",
+      "wstETH": "3120"
+    },
+    "raw": {
+      "cash": "233.9572",
+      "productive_assets": "0",
+      "collateral_assets": "815.6616",
+      "lending_assets": "100.62",
+      "other_assets": "0",
+      "borrow_principal": "-150",
+      "accrued_interest": "-0.9162411687664035247816933450209115",
+      "contributed_capital": "-1000",
+      "withdrawals": "25",
+      "unrealized_pnl": "-22.2259",
+      "staking_income": "-4.3929",
+      "lending_income": "-0.62",
+      "funding_income": "-0.55",
+      "lp_income": "-0.3",
+      "incentives": "-0.75",
+      "realized_pnl": "0",
+      "fees": "3.6",
+      "financing_cost": "0.9162411687664035247816933450209115",
+      "funding_expense": "0",
+      "liquidation_loss": "0",
+      "other_loss": "0",
+      "operating_expense": "0"
+    },
+    "shares": "974.8809361014156612590549849904769",
+    "snapshots": [
+      {
+        "at": "2026-01-01T00:00:00Z",
+        "entryId": "e-0001",
+        "nav": "1000",
+        "shares": "1000",
+        "unitNav": "1",
+        "grossAssets": "1000",
+        "totalDebt": "0",
+        "deployed": "0",
+        "liquidReserves": "1000",
+        "netPnl": "0",
+        "realizedPnl": "0",
+        "unrealizedPnl": "0"
+      },
+      {
+        "at": "2026-01-01T00:00:00Z",
+        "entryId": "e-0002",
+        "nav": "1000",
+        "shares": "1000",
+        "unitNav": "1",
+        "grossAssets": "1000",
+        "totalDebt": "0",
+        "deployed": "0",
+        "liquidReserves": "1000",
+        "netPnl": "0",
+        "realizedPnl": "0",
+        "unrealizedPnl": "0"
+      },
+      {
+        "at": "2026-01-01T00:00:00Z",
+        "entryId": "e-0003",
+        "nav": "1000",
+        "shares": "1000",
+        "unitNav": "1",
+        "grossAssets": "1000",
+        "totalDebt": "0",
+        "deployed": "789.0428",
+        "liquidReserves": "210.9572",
+        "netPnl": "0",
+        "realizedPnl": "0",
+        "unrealizedPnl": "0"
+      },
+      {
+        "at": "2026-01-01T00:00:00Z",
+        "entryId": "e-0004",
+        "nav": "997.5",
+        "shares": "1000",
+        "unitNav": "0.9975",
+        "grossAssets": "997.5",
+        "totalDebt": "0",
+        "deployed": "789.0428",
+        "liquidReserves": "208.4572",
+        "netPnl": "-2.5",
+        "realizedPnl": "-2.5",
+        "unrealizedPnl": "0"
+      },
+      {
+        "at": "2026-01-01T00:00:00Z",
+        "entryId": "e-0005",
+        "nav": "997.5",
+        "shares": "1000",
+        "unitNav": "0.9975",
+        "grossAssets": "997.5",
+        "totalDebt": "0",
+        "deployed": "789.0428",
+        "liquidReserves": "208.4572",
+        "netPnl": "-2.5",
+        "realizedPnl": "-2.5",
+        "unrealizedPnl": "0"
+      },
+      {
+        "at": "2026-01-01T00:00:00Z",
+        "entryId": "e-0006",
+        "nav": "997.5",
+        "shares": "1000",
+        "unitNav": "0.9975",
+        "grossAssets": "1147.5",
+        "totalDebt": "150",
+        "deployed": "789.0428",
+        "liquidReserves": "358.4572",
+        "netPnl": "-2.5",
+        "realizedPnl": "-2.5",
+        "unrealizedPnl": "0"
+      },
+      {
+        "at": "2026-01-01T00:00:00Z",
+        "entryId": "e-0007",
+        "nav": "997.5",
+        "shares": "1000",
+        "unitNav": "0.9975",
+        "grossAssets": "1147.5",
+        "totalDebt": "150",
+        "deployed": "789.0428",
+        "liquidReserves": "358.4572",
+        "netPnl": "-2.5",
+        "realizedPnl": "-2.5",
+        "unrealizedPnl": "0"
+      },
+      {
+        "at": "2026-01-01T00:00:00Z",
+        "entryId": "e-0008",
+        "nav": "997.5",
+        "shares": "1000",
+        "unitNav": "0.9975",
+        "grossAssets": "1147.5",
+        "totalDebt": "150",
+        "deployed": "789.0428",
+        "liquidReserves": "358.4572",
+        "netPnl": "-2.5",
+        "realizedPnl": "-2.5",
+        "unrealizedPnl": "0"
+      },
+      {
+        "at": "2026-01-01T00:00:00Z",
+        "entryId": "e-0009",
+        "nav": "997.5",
+        "shares": "1000",
+        "unitNav": "0.9975",
+        "grossAssets": "1147.5",
+        "totalDebt": "150",
+        "deployed": "889.0428",
+        "liquidReserves": "258.4572",
+        "netPnl": "-2.5",
+        "realizedPnl": "-2.5",
+        "unrealizedPnl": "0"
+      },
+      {
+        "at": "2026-01-31T00:00:00Z",
+        "entryId": "e-0010",
+        "nav": "1009.2572",
+        "shares": "1000",
+        "unitNav": "1.0092572",
+        "grossAssets": "1159.2572",
+        "totalDebt": "150",
+        "deployed": "900.8",
+        "liquidReserves": "258.4572",
+        "netPnl": "9.2572",
+        "realizedPnl": "-2.5",
+        "unrealizedPnl": "11.7572"
+      },
+      {
+        "at": "2026-01-31T00:00:00Z",
+        "entryId": "e-0011",
+        "nav": "1010.7356",
+        "shares": "1000",
+        "unitNav": "1.0107356",
+        "grossAssets": "1160.7356",
+        "totalDebt": "150",
+        "deployed": "902.2784",
+        "liquidReserves": "258.4572",
+        "netPnl": "10.7356",
+        "realizedPnl": "-1.0216",
+        "unrealizedPnl": "11.7572"
+      },
+      {
+        "at": "2026-01-31T00:00:00Z",
+        "entryId": "e-0012",
+        "nav": "1010.9456",
+        "shares": "1000",
+        "unitNav": "1.0109456",
+        "grossAssets": "1160.9456",
+        "totalDebt": "150",
+        "deployed": "902.4884",
+        "liquidReserves": "258.4572",
+        "netPnl": "10.9456",
+        "realizedPnl": "-0.8116",
+        "unrealizedPnl": "11.7572"
+      },
+      {
+        "at": "2026-01-31T00:00:00Z",
+        "entryId": "e-0013",
+        "nav": "1010.637380821917808219178082191781",
+        "shares": "1000",
+        "unitNav": "1.010637380821917808219178082191781",
+        "grossAssets": "1160.9456",
+        "totalDebt": "150.3082191780821917808219178082192",
+        "deployed": "902.4884",
+        "liquidReserves": "258.4572",
+        "netPnl": "10.637380821917808219178082191781",
+        "realizedPnl": "-1.119819178082191780821917808219178",
+        "unrealizedPnl": "11.7572"
+      },
+      {
+        "at": "2026-02-15T00:00:00Z",
+        "entryId": "e-0014",
+        "nav": "1011.187380821917808219178082191781",
+        "shares": "1000",
+        "unitNav": "1.011187380821917808219178082191781",
+        "grossAssets": "1161.4956",
+        "totalDebt": "150.3082191780821917808219178082192",
+        "deployed": "902.4884",
+        "liquidReserves": "259.0072",
+        "netPnl": "11.187380821917808219178082191781",
+        "realizedPnl": "-0.569819178082191780821917808219178",
+        "unrealizedPnl": "11.7572"
+      },
+      {
+        "at": "2026-02-15T00:00:00Z",
+        "entryId": "e-0015",
+        "nav": "1011.487380821917808219178082191781",
+        "shares": "1000",
+        "unitNav": "1.011487380821917808219178082191781",
+        "grossAssets": "1161.7956",
+        "totalDebt": "150.3082191780821917808219178082192",
+        "deployed": "902.4884",
+        "liquidReserves": "259.3072",
+        "netPnl": "11.487380821917808219178082191781",
+        "realizedPnl": "-0.269819178082191780821917808219178",
+        "unrealizedPnl": "11.7572"
+      },
+      {
+        "at": "2026-02-28T00:00:00Z",
+        "entryId": "e-0016",
+        "nav": "993.2537808219178082191780821917808",
+        "shares": "1000",
+        "unitNav": "0.9932537808219178082191780821917808",
+        "grossAssets": "1143.562",
+        "totalDebt": "150.3082191780821917808219178082192",
+        "deployed": "884.2548",
+        "liquidReserves": "259.3072",
+        "netPnl": "-6.7462191780821917808219178082192",
+        "realizedPnl": "-0.269819178082191780821917808219178",
+        "unrealizedPnl": "-6.4764"
+      },
+      {
+        "at": "2026-02-28T00:00:00Z",
+        "entryId": "e-0017",
+        "nav": "994.6082808219178082191780821917808",
+        "shares": "1000",
+        "unitNav": "0.9946082808219178082191780821917808",
+        "grossAssets": "1144.9165",
+        "totalDebt": "150.3082191780821917808219178082192",
+        "deployed": "885.6093",
+        "liquidReserves": "259.3072",
+        "netPnl": "-5.3917191780821917808219178082192",
+        "realizedPnl": "1.084680821917808219178082191780822",
+        "unrealizedPnl": "-6.4764"
+      },
+      {
+        "at": "2026-02-28T00:00:00Z",
+        "entryId": "e-0018",
+        "nav": "994.7982808219178082191780821917808",
+        "shares": "1000",
+        "unitNav": "0.9947982808219178082191780821917808",
+        "grossAssets": "1145.1065",
+        "totalDebt": "150.3082191780821917808219178082192",
+        "deployed": "885.7993",
+        "liquidReserves": "259.3072",
+        "netPnl": "-5.2017191780821917808219178082192",
+        "realizedPnl": "1.274680821917808219178082191780822",
+        "unrealizedPnl": "-6.4764"
+      },
+      {
+        "at": "2026-02-28T00:00:00Z",
+        "entryId": "e-0019",
+        "nav": "994.5100184837680615500093826233815",
+        "shares": "1000",
+        "unitNav": "0.9945100184837680615500093826233815",
+        "grossAssets": "1145.1065",
+        "totalDebt": "150.5964815162319384499906173766185",
+        "deployed": "885.7993",
+        "liquidReserves": "259.3072",
+        "netPnl": "-5.4899815162319384499906173766185",
+        "realizedPnl": "0.986418483768061550009382623381498",
+        "unrealizedPnl": "-6.4764"
+      },
+      {
+        "at": "2026-03-01T00:00:00Z",
+        "entryId": "e-0020",
+        "nav": "995.2600184837680615500093826233815",
+        "shares": "1000",
+        "unitNav": "0.9952600184837680615500093826233815",
+        "grossAssets": "1145.8565",
+        "totalDebt": "150.5964815162319384499906173766185",
+        "deployed": "885.7993",
+        "liquidReserves": "260.0572",
+        "netPnl": "-4.7399815162319384499906173766185",
+        "realizedPnl": "1.736418483768061550009382623381498",
+        "unrealizedPnl": "-6.4764"
+      },
+      {
+        "at": "2026-03-01T00:00:00Z",
+        "entryId": "e-0021",
+        "nav": "970.2600184837680615500093826233815",
+        "shares": "974.8809361014156612590549849904769",
+        "unitNav": "0.9952600184837680615500093826233815",
+        "grossAssets": "1120.8565",
+        "totalDebt": "150.5964815162319384499906173766185",
+        "deployed": "885.7993",
+        "liquidReserves": "235.0572",
+        "netPnl": "-4.7399815162319384499906173766185",
+        "realizedPnl": "1.736418483768061550009382623381498",
+        "unrealizedPnl": "-6.4764"
+      },
+      {
+        "at": "2026-03-31T00:00:00Z",
+        "entryId": "e-0022",
+        "nav": "998.9623184837680615500093826233815",
+        "shares": "974.8809361014156612590549849904769",
+        "unitNav": "1.0247018702393081197623292059744",
+        "grossAssets": "1149.5588",
+        "totalDebt": "150.5964815162319384499906173766185",
+        "deployed": "914.5016",
+        "liquidReserves": "235.0572",
+        "netPnl": "23.9623184837680615500093826233815",
+        "realizedPnl": "1.736418483768061550009382623381498",
+        "unrealizedPnl": "22.2259"
+      },
+      {
+        "at": "2026-03-31T00:00:00Z",
+        "entryId": "e-0023",
+        "nav": "1000.522318483768061550009382623382",
+        "shares": "974.8809361014156612590549849904769",
+        "unitNav": "1.026302065650081559201371335853455",
+        "grossAssets": "1151.1188",
+        "totalDebt": "150.5964815162319384499906173766185",
+        "deployed": "916.0616",
+        "liquidReserves": "235.0572",
+        "netPnl": "25.522318483768061550009382623382",
+        "realizedPnl": "3.296418483768061550009382623381498",
+        "unrealizedPnl": "22.2259"
+      },
+      {
+        "at": "2026-03-31T00:00:00Z",
+        "entryId": "e-0024",
+        "nav": "1000.742318483768061550009382623382",
+        "shares": "974.8809361014156612590549849904769",
+        "unitNav": "1.026527734233652172455595225964604",
+        "grossAssets": "1151.3388",
+        "totalDebt": "150.5964815162319384499906173766185",
+        "deployed": "916.2816",
+        "liquidReserves": "235.0572",
+        "netPnl": "25.742318483768061550009382623382",
+        "realizedPnl": "3.516418483768061550009382623381498",
+        "unrealizedPnl": "22.2259"
+      },
+      {
+        "at": "2026-03-31T00:00:00Z",
+        "entryId": "e-0025",
+        "nav": "1000.422558831233596475218306654979",
+        "shares": "974.8809361014156612590549849904769",
+        "unitNav": "1.026199735561513607964716668589797",
+        "grossAssets": "1151.3388",
+        "totalDebt": "150.9162411687664035247816933450209",
+        "deployed": "916.2816",
+        "liquidReserves": "235.0572",
+        "netPnl": "25.422558831233596475218306654979",
+        "realizedPnl": "3.196658831233596475218306654979088",
+        "unrealizedPnl": "22.2259"
+      },
+      {
+        "at": "2026-03-31T00:00:00Z",
+        "entryId": "e-0026",
+        "nav": "999.3225588312335964752183066549791",
+        "shares": "974.8809361014156612590549849904769",
+        "unitNav": "1.025071392643660541693597218034053",
+        "grossAssets": "1150.2388",
+        "totalDebt": "150.9162411687664035247816933450209",
+        "deployed": "916.2816",
+        "liquidReserves": "233.9572",
+        "netPnl": "24.3225588312335964752183066549791",
+        "realizedPnl": "2.096658831233596475218306654979088",
+        "unrealizedPnl": "22.2259"
+      }
+    ]
+  }
+}

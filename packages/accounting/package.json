@@ -1,0 +1,26 @@
+{
+  "name": "@shadow-banking/accounting",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Double-entry accounting ledger and consolidated performance report (spec §8–9). CLI only; not a protocol APY display.",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "bin": {
+    "accounting": "./src/cli.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run --root ../.. packages/accounting",
+    "cli": "tsx src/cli.ts"
+  },
+  "dependencies": {
+    "@shadow-banking/core": "workspace:*",
+    "decimal.js": "^10.6.0",
+    "zod": "^3.25.76"
+  }
+}

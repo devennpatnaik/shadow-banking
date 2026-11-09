@@ -56,3 +56,9 @@ jobs:
         run: |
           pnpm strategy compare --snapshot docs/data/market-snapshot-2026-10-21.json --seed 1000
           pnpm strategy compare --snapshot docs/data/market-snapshot-2026-10-21.json --seed 1000 --json > /tmp/strategy.json
+
+      - name: Accounting smoke run (no network)
+        run: |
+          pnpm accounting report --json > /tmp/accounting-report.json
+          pnpm accounting ledger --json > /tmp/accounting-ledger.json
+          pnpm accounting allocate --json > /tmp/accounting-allocate.json
