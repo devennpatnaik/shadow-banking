@@ -2,7 +2,7 @@
 
 An AI-managed personal shadow-banking platform: software that lets an individual operate a managed financial balance sheet of the kind normally run by banks, hedge funds, and institutional treasuries.
 
-> **Status:** TypeScript/pnpm monorepo with a consolidated balance-sheet model (`packages/core`), recursive borrowing simulator (`simulator/`), and strategy economics engine (`packages/strategy`). See [Getting started](#getting-started).
+> **Status:** TypeScript/pnpm monorepo with a consolidated balance-sheet model (`packages/core`), recursive borrowing simulator (`simulator/`), strategy economics engine (`packages/strategy`), and accounting ledger (`packages/accounting`). See [Getting started](#getting-started).
 
 The full product specification lives in [`docs/spec.md`](docs/spec.md).
 
@@ -21,13 +21,16 @@ pnpm sim run --preset aave-v3-ethereum-wsteth-eth-emode --seed 1000
 pnpm sim compare --seed 1000
 pnpm strategy compare --snapshot docs/data/market-snapshot-2026-10-21.json --seed 1000
 pnpm strategy compare --snapshot docs/data/market-snapshot-2026-10-21.json --seed 1000 --json
+pnpm accounting report
+pnpm accounting ledger --json
 ```
 
 - [`packages/core`](packages/core/) — consolidated balance-sheet model (disclosures, T0–T3 liquidity tiers, NAV, health factor, deployable capital).
 - [`simulator/`](simulator/) — recursive collateralized-borrowing simulator. All printed APYs are **estimates** from a dated snapshot, not realized returns. Default hurdle: 10% annualized net, configurable.
 - [`packages/strategy`](packages/strategy/) — strategy economics and risk comparison (hold LST, 2x/3x loop, hedged carry, optional LP, preserve-liquid). CLI tables plus `--json`. Default hurdle: 10% annualized net, configurable, not a promise.
+- [`packages/accounting`](packages/accounting/) — double-entry ledger and consolidated performance report (CLI). Borrowed principal is not income; annualized yield is labeled an estimate.
 
-CI (`.github/workflows/ci.yml`) runs typecheck, lint, format check, tests, and simulator/strategy smoke runs on Node 20 and 22.
+CI (`.github/workflows/ci.yml`) runs typecheck, lint, format check, tests, and simulator/strategy/accounting smoke runs on Node 20 and 22.
 
 ## Documentation
 
@@ -76,7 +79,9 @@ The platform is built as ten modular services. Each has a placeholder in [`servi
 Two top-level workspaces sit alongside the services:
 
 - [`simulator/`](simulator/) — the shadow-bank simulator for the recursive collateral-and-borrowing loop (Phase 2).
-- [`dashboard/`](dashboard/) — the live-data dashboard (Phase 4 onward).
+- [`packages/strategy`](packages/strategy/) — strategy economics and risk comparison (spec §14.5).
+- [`packages/accounting`](packages/accounting/) — ledger and performance report (spec §14.7). Text CLI; no web UI.
+- [`dashboard/`](dashboard/) — placeholder; live output is CLI/structured text, not a graphical dashboard.
 
 ---
 
@@ -147,6 +152,10 @@ The risk governor is designed to prioritize survival over yield and to reject or
 ├── README.md
 ├── docs/
 │   └── spec.md              # full product specification
+├── packages/
+│   ├── core/                # balance-sheet domain model
+│   ├── strategy/            # strategy economics + risk comparison
+│   └── accounting/          # ledger + performance CLI
 ├── services/
 │   ├── account-disclosure/
 │   ├── balance-sheet-engine/
@@ -158,9 +167,6 @@ The risk governor is designed to prioritize survival over yield and to reject or
 │   ├── portfolio-controller/
 │   ├── user-interface/
 │   └── audit-monitoring/
-├── packages/
-│   ├── core/
-│   └── strategy/
 ├── simulator/
 └── dashboard/
 ```
