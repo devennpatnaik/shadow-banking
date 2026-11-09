@@ -2,7 +2,7 @@
 
 An AI-managed personal shadow-banking platform: software that lets an individual operate a managed financial balance sheet of the kind normally run by banks, hedge funds, and institutional treasuries.
 
-> **Status:** TypeScript/pnpm monorepo with a consolidated balance-sheet model (`packages/core`) and recursive borrowing simulator (`simulator/`). See [Getting started](#getting-started).
+> **Status:** TypeScript/pnpm monorepo with a consolidated balance-sheet model (`packages/core`), recursive borrowing simulator (`simulator/`), and strategy economics engine (`packages/strategy`). See [Getting started](#getting-started).
 
 The full product specification lives in [`docs/spec.md`](docs/spec.md).
 
@@ -19,12 +19,15 @@ pnpm typecheck
 pnpm test
 pnpm sim run --preset aave-v3-ethereum-wsteth-eth-emode --seed 1000
 pnpm sim compare --seed 1000
+pnpm strategy compare --snapshot docs/data/market-snapshot-2026-10-21.json --seed 1000
+pnpm strategy compare --snapshot docs/data/market-snapshot-2026-10-21.json --seed 1000 --json
 ```
 
 - [`packages/core`](packages/core/) — consolidated balance-sheet model (disclosures, T0–T3 liquidity tiers, NAV, health factor, deployable capital).
 - [`simulator/`](simulator/) — recursive collateralized-borrowing simulator. All printed APYs are **estimates** from a dated snapshot, not realized returns. Default hurdle: 10% annualized net, configurable.
+- [`packages/strategy`](packages/strategy/) — strategy economics and risk comparison (hold LST, 2x/3x loop, hedged carry, optional LP, preserve-liquid). CLI tables plus `--json`. Default hurdle: 10% annualized net, configurable, not a promise.
 
-CI (`.github/workflows/ci.yml`) runs typecheck, lint, format check, tests, and a simulator smoke run on Node 20 and 22.
+CI (`.github/workflows/ci.yml`) runs typecheck, lint, format check, tests, and simulator/strategy smoke runs on Node 20 and 22.
 
 ## Documentation
 
@@ -155,6 +158,9 @@ The risk governor is designed to prioritize survival over yield and to reject or
 │   ├── portfolio-controller/
 │   ├── user-interface/
 │   └── audit-monitoring/
+├── packages/
+│   ├── core/
+│   └── strategy/
 ├── simulator/
 └── dashboard/
 ```

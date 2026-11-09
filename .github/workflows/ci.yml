@@ -51,3 +51,8 @@ jobs:
           pnpm sim presets
           pnpm sim run --preset aave-v3-ethereum-wsteth-eth-emode --seed 1000 --format json > /tmp/run.json
           pnpm sim compare --seed 1000
+
+      - name: Strategy compare smoke run (no network)
+        run: |
+          pnpm strategy compare --snapshot docs/data/market-snapshot-2026-10-21.json --seed 1000
+          pnpm strategy compare --snapshot docs/data/market-snapshot-2026-10-21.json --seed 1000 --json > /tmp/strategy.json

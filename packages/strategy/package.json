@@ -1,0 +1,27 @@
+{
+  "name": "@shadow-banking/strategy",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Strategy economics and risk-comparison engine: hold LST, recursive loops, hedged carry, LP, and preserve-liquid; configurable net hurdle; CLI tables and --json.",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "bin": {
+    "strategy": "./src/cli.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run --root ../.. packages/strategy",
+    "cli": "tsx src/cli.ts"
+  },
+  "dependencies": {
+    "@shadow-banking/core": "workspace:*",
+    "@shadow-banking/simulator": "workspace:*",
+    "decimal.js": "^10.6.0",
+    "zod": "^3.25.76"
+  }
+}
