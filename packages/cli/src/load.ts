@@ -10,7 +10,7 @@ import {
   readJsonFile,
   type GovernorSnapshot,
 } from './hydrate.js';
-import { snapshotFromBook } from './risk.js';
+import { snapshotFromBook } from '@shadow-banking/risk';
 
 export function repoRootFromCwd(): string {
   return process.cwd();

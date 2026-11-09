@@ -17,7 +17,7 @@ import { DEFAULT_HURDLE } from './defaults.js';
 import { loadBook, loadProfile, loadRiskInput } from './load.js';
 import { cmdAccounting, cmdStrategy } from './engines.js';
 import { USAGE, flagOn, flagValue, type ParsedArgs } from './parse.js';
-import { actionCopy, evaluateGovernorSnapshot } from './risk.js';
+import { actionCopy, evaluateGovernorSnapshot } from '@shadow-banking/risk';
 import {
   PRESET_IDS,
   buildPreset,
@@ -270,6 +270,7 @@ export function cmdRisk(io: Io, args: ParsedArgs): number {
     ok: !evaln.veto,
     command: 'risk',
     source,
+    engine: '@shadow-banking/risk',
     spec: 'docs/risk-governor.md',
     state: evaln.state,
     veto: evaln.veto,
@@ -348,6 +349,7 @@ export function cmdStatus(io: Io, args: ParsedArgs): number {
   const payload = {
     ok: !evaln.veto,
     command: 'status',
+    engine: '@shadow-banking/risk',
     source,
     asOf: snapshot.asOf,
     nav: toJsonNumber(evaln.metrics.navUsd),

@@ -19,9 +19,13 @@ pnpm sb strategy --json
 pnpm sb accounting --json
 pnpm opportunity show --json
 pnpm opportunity refresh --provider fixture --json
+pnpm risk state --json
+pnpm risk evaluate --json --fixture caution
 ```
 
-`pnpm sb` is the paper-book entrypoint (`packages/cli`). It wraps `@shadow-banking/core`, `@shadow-banking/simulator`, `@shadow-banking/strategy`, and `@shadow-banking/accounting`. Market snapshots are refreshed with `pnpm opportunity` (`@shadow-banking/opportunity`) in fixture or live mode; CI uses `--provider fixture` (no network). If the strategy engine recommends preserve-capital, `noDeployment` is true — **do not invent a deployment**.
+`pnpm sb` is the paper-book entrypoint (`packages/cli`). It wraps `@shadow-banking/core`, `@shadow-banking/simulator`, `@shadow-banking/strategy`, `@shadow-banking/accounting`, and `@shadow-banking/risk`. Market snapshots are refreshed with `pnpm opportunity` (`@shadow-banking/opportunity`) in fixture or live mode; CI uses `--provider fixture` (no network). If the strategy engine recommends preserve-capital, `noDeployment` is true — **do not invent a deployment**.
+
+Dedicated governor CLI: `pnpm risk state` / `pnpm risk evaluate` (same veto semantics).
 
 Every command accepts `--json` (machine-readable stdout). Default output is a text table for humans.
 
@@ -63,8 +67,8 @@ Example shape (`pnpm sb status --json`):
 
 Rules: [`docs/risk-governor.md`](docs/risk-governor.md). The CLI recomputes state from a book or snapshot. It does **not** trust a caller-supplied state.
 
-- States: `Normal` | `Caution` | `Deleveraging` | `Emergency`.
-- **Veto** (`veto: true`, exit `2`): `Deleveraging` or `Emergency`. Reject every risk-increasing action. You may not work around a veto in text, code, or by calling a different command.
+- States: `Normal` | `Caution` | `Deleveraging` | `Emergency`. Implemented by `@shadow-banking/risk` (not a docs mapping). Entry is worst-of; exit uses hysteresis + dwell from [`docs/risk-governor.md`](docs/risk-governor.md).
+- **Veto** (`veto: true`, exit `2`): `Deleveraging` or `Emergency`, or a rejected proposal. Reject every risk-increasing action. You may not work around a veto in text, code, or by calling a different command.
 - `Caution`: stop increasing leverage; prefer reserves. Not a veto, still `noDeployment: true`.
 - There is no override flag. Loosening limits is a signed, time-locked human configuration change, not an agent action.
 
@@ -98,5 +102,6 @@ Assisted execution (user-approved intents), then limited automation, is specifie
 | [`docs/risk-governor.md`](docs/risk-governor.md)                   | Limits, states, veto, unwind         |
 | [`docs/economics-1k.md`](docs/economics-1k.md)                     | Why $1k currently fails the hurdle   |
 | [`packages/opportunity/README.md`](packages/opportunity/README.md) | Live/fixture market snapshot refresh |
+| [`packages/risk/README.md`](packages/risk/README.md)               | Risk governor runtime and veto CLI   |
 
 Do not add a dashboard, web app, or GUI.

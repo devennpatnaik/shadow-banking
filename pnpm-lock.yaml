@@ -59,6 +59,9 @@ importers:
       '@shadow-banking/core':
         specifier: workspace:*
         version: link:../core
+      '@shadow-banking/risk':
+        specifier: workspace:*
+        version: link:../risk
       '@shadow-banking/simulator':
         specifier: workspace:*
         version: link:../../simulator
@@ -90,6 +93,15 @@ importers:
       '@shadow-banking/strategy':
         specifier: workspace:*
         version: link:../strategy
+
+  packages/risk:
+    dependencies:
+      '@shadow-banking/core':
+        specifier: workspace:*
+        version: link:../core
+      decimal.js:
+        specifier: ^10.6.0
+        version: 10.6.0
 
   packages/strategy:
     dependencies:
