@@ -63,9 +63,9 @@ export function paperRunToJson(result: PaperRunResult): Record<string, unknown> 
     comparison: result.lastComparison ? comparisonToJson(result.lastComparison) : null,
     governor: result.lastEvaluation ? evaluationToJson(result.lastEvaluation, 'paper') : null,
     assistedExecution: {
-      status: 'not_implemented',
-      earliestPhase: 5,
-      note: 'Phase 4 paper only. No signing, no live transactions.',
+      status: 'propose_approve_only',
+      phase: 5,
+      note: 'Use pnpm execution for Phase 5 propose+approve. Paper loop still does not sign or broadcast.',
     },
   };
 }

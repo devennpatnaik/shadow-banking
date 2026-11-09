@@ -52,8 +52,9 @@ describe('JSON shapes', () => {
     expect(json['recommendedAction']).toBe('hold_liquid');
     expect(json['riskState']).toBe('Normal');
     expect(json['assistedExecution']).toMatchObject({
-      status: 'not_implemented',
-      earliestPhase: 5,
+      status: 'propose_approve_only',
+      phase: 5,
+      broadcast: false,
     });
   });
 
@@ -137,6 +138,19 @@ describe('JSON shapes', () => {
     expect(json['nav']).toBe('1000');
     expect(json['debt']).toBe('0');
     expect(String(json['headline'])).toMatch(/HOLD LIQUID/);
+  });
+
+  it('execution propose --json is Phase 5 propose_only', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'sb-cli-exec-'));
+    const r = capture(['execution', 'propose', '--json', '--preset', 'hold-liquid', '--dir', dir]);
+    expect(r.code).toBe(EXIT_OK);
+    const json = parseStdoutJson(r.stdout);
+    expect(json['command']).toBe('execution');
+    expect(json['phase']).toBe('5');
+    expect(json['execution']).toBe('propose_only');
+    expect(json['broadcast']).toBe(false);
+    expect(json['status']).toBe('draft');
+    expect(json['signingKeys']).toBe(false);
   });
 
   it('risk --json on the default paper book is Normal / no veto', () => {

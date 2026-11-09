@@ -27,6 +27,11 @@ describe('parseArgs', () => {
     expect(parseArgs(['controller', '--json']).command).toBe('paper');
   });
 
+  it('maps execution aliases', () => {
+    expect(parseArgs(['execution', 'propose', '--json']).command).toBe('execution');
+    expect(parseArgs(['exec', 'approve', '--id', 'x']).command).toBe('execution');
+  });
+
   it('records unknown commands', () => {
     const p = parseArgs(['dashboard']);
     expect(p.command).toBeNull();

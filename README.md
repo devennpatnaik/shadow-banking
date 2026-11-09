@@ -2,7 +2,7 @@
 
 An AI-managed personal shadow-banking platform: software that lets an individual operate a managed financial balance sheet of the kind normally run by banks, hedge funds, and institutional treasuries.
 
-> **Status:** TypeScript/pnpm monorepo with a consolidated balance-sheet model (`packages/core`), recursive borrowing simulator (`simulator/`), strategy economics engine (`packages/strategy`), opportunity engine (`packages/opportunity`), accounting ledger (`packages/accounting`), risk governor (`packages/risk`), paper portfolio controller (`packages/controller`), and an LLM-facing terminal CLI (`packages/cli`). See [Getting started](#getting-started). No web UI.
+> **Status:** TypeScript/pnpm monorepo with a consolidated balance-sheet model (`packages/core`), recursive borrowing simulator (`simulator/`), strategy economics engine (`packages/strategy`), opportunity engine (`packages/opportunity`), accounting ledger (`packages/accounting`), risk governor (`packages/risk`), paper portfolio controller (`packages/controller`), Phase 5 assisted execution (`packages/execution`), and an LLM-facing terminal CLI (`packages/cli`). See [Getting started](#getting-started). No web UI.
 
 The full product specification lives in [`docs/spec.md`](docs/spec.md).
 
@@ -34,11 +34,13 @@ pnpm risk state --json
 pnpm risk evaluate --json --fixture caution
 pnpm paper run --steps 7 --seed 1000 --json
 pnpm sb paper run --steps 7 --seed 1000 --json
+pnpm execution propose --preset hold-liquid --json
+pnpm sb execution propose --preset hold-liquid --json
 ```
 
-Read [`AGENTS.md`](AGENTS.md) (and [`.claude/CLAUDE.md`](.claude/CLAUDE.md)) before using the CLI from an agent: `--json` stdout, exit `2` = risk veto, `noDeployment` means hold liquid, Phases 1–4 never execute real transactions.
+Read [`AGENTS.md`](AGENTS.md) (and [`.claude/CLAUDE.md`](.claude/CLAUDE.md)) before using the CLI from an agent: `--json` stdout, exit `2` = risk veto, `noDeployment` means hold liquid, Phase 5 is propose+approve only (no live txs).
 
-- [`packages/cli`](packages/cli/) — LLM-compatible paper/read-only shell (`status`, `balance-sheet`, `disclosures`, `sim`, `strategy`, `accounting`, `risk`, `paper`).
+- [`packages/cli`](packages/cli/) — LLM-compatible paper/read-only shell (`status`, `balance-sheet`, `disclosures`, `sim`, `strategy`, `accounting`, `risk`, `paper`, `execution`).
 - [`packages/core`](packages/core/) — consolidated balance-sheet model (disclosures, T0–T3 liquidity tiers, NAV, health factor, deployable capital).
 - [`simulator/`](simulator/) — recursive collateralized-borrowing simulator. All printed APYs are **estimates** from a dated snapshot, not realized returns. Default hurdle: 10% annualized net, configurable.
 - [`packages/strategy`](packages/strategy/) — strategy economics and risk comparison (hold LST, 2x/3x loop, hedged carry, optional LP, preserve-liquid). CLI tables plus `--json`. Default hurdle: 10% annualized net, configurable, not a promise.
@@ -46,6 +48,7 @@ Read [`AGENTS.md`](AGENTS.md) (and [`.claude/CLAUDE.md`](.claude/CLAUDE.md)) bef
 - [`packages/accounting`](packages/accounting/) — double-entry ledger and consolidated performance report (CLI). Borrowed principal is not income; annualized yield is labeled an estimate.
 - [`packages/risk`](packages/risk/) — risk governor runtime (states, hysteresis, hard-limit veto). `pnpm risk state` / `pnpm risk evaluate`; also used by `pnpm sb risk` and `pnpm sb status`.
 - [`packages/controller`](packages/controller/) — Phase 4 paper portfolio loop (snapshot → strategies → veto → hypothetical ledger). `pnpm paper run`; also `pnpm sb paper`.
+- [`packages/execution`](packages/execution/) — Phase 5 assisted execution (`propose` / `show` / `approve` / `reject`). Broadcast refused. Mock simulator offline; optional `EXECUTION_RPC_URL`.
 
 CI (`.github/workflows/ci.yml`) runs typecheck, lint, format check, tests, and simulator/strategy/opportunity/accounting/CLI smoke runs on Node 20 and 22.
 

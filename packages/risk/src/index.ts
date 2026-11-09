@@ -24,6 +24,7 @@ export {
   uncorrelatedLendingBook,
 } from './fixtures.js';
 export { hydrateMemory, hydrateProposal } from './hydrate.js';
+export { hydrateBalanceSheet } from './book-hydrate.js';
 export { hydrateGovernorSnapshot, looksLikeBalanceSheet, readJsonFile } from './load.js';
 export { initialMemory, tick, type TickOptions } from './machine.js';
 export { observationFromBook, observationFromFlat, type ObservationExtras } from './observe.js';
@@ -36,6 +37,7 @@ export type {
   Decision,
   EvaluationResult,
   FixtureName,
+  IntentDecision,
   KillSwitch,
   Proposal,
   RecommendedAction,

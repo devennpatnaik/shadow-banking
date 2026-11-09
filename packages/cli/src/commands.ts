@@ -17,6 +17,7 @@ import { DEFAULT_HURDLE } from './defaults.js';
 import { loadBook, loadProfile, loadRiskInput } from './load.js';
 import { cmdAccounting, cmdStrategy } from './engines.js';
 import { cmdPaper } from './paper.js';
+import { cmdExecution } from './execution.js';
 import { USAGE, flagOn, flagValue, type ParsedArgs } from './parse.js';
 import { actionCopy, evaluateGovernorSnapshot } from '@shadow-banking/risk';
 import {
@@ -50,6 +51,7 @@ export function cmdHelp(io: Io, json: boolean): number {
           'accounting',
           'risk',
           'paper',
+          'execution',
         ],
         exitCodes: { 0: 'ok', 1: 'error', 2: 'risk veto' },
       }),
@@ -370,10 +372,11 @@ export function cmdStatus(io: Io, args: ParsedArgs): number {
     bookPresent: Boolean(book),
     action: actionCopy(evaln.recommendedAction),
     assistedExecution: {
-      status: 'not_implemented',
-      earliestPhase: 5,
-      hooks: ['propose', 'simulate', 'request-user-approval'],
-      note: 'Phase 5+ may add assisted-execution hooks. This CLI will still not sign or submit.',
+      status: 'propose_approve_only',
+      phase: 5,
+      hooks: ['propose', 'show', 'approve', 'reject'],
+      broadcast: false,
+      note: 'Phase 5: propose+approve only. No live txs. pnpm execution / pnpm sb execution. Broadcast refused.',
     },
   };
   const text = [
@@ -391,7 +394,7 @@ export function cmdStatus(io: Io, args: ParsedArgs): number {
     ]),
     '',
     actionCopy(evaln.recommendedAction),
-    'Never execute real transactions in Phases 1–4. No signing keys in this interface.',
+    'Phase 5: propose + approve only. Never execute live transactions. No signing keys in this interface.',
   ].join('\n');
   writeOut(io, args.json, payload, text);
   return evaln.veto ? EXIT_VETO : EXIT_OK;
@@ -429,6 +432,8 @@ export function dispatch(io: Io, args: ParsedArgs): number {
       return cmdStatus(io, args);
     case 'paper':
       return cmdPaper(io, args);
+    case 'execution':
+      return cmdExecution(io, args);
     default: {
       const _never: never = args.command;
       io.stderr.write(`unhandled command ${String(_never)}\n`);
