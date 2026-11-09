@@ -350,13 +350,13 @@ Each module is a separately deployable service or worker with the responsibility
 - **Persistence.** Decision log with inputs and rationale.
 - **Notes.** Reserve first, repayment second, deployment third. Compounding never increases leverage automatically (§9). In Caution and above the controller may only produce risk-neutral or risk-reducing proposals.
 
-### 5.10 User interface (`services/user-interface`, `dashboard/`)
+### 5.10 User interface (`services/user-interface`, `packages/cli`)
 
 - **Responsibility.** Show the balance sheet (owned vs. borrowed, liquidity tiers), yield sources (gross, estimated net, realized net), debt and financing costs, risk state and distance to limits, performance, pending proposals with explanations, custody status, and controls (approve, decline, pause, kill, constraints) (§10, §11, §12).
 - **Inputs.** Read models from accounting, balance-sheet, governor, controller.
 - **Outputs.** `UserDirective`s; nothing else.
 - **Persistence.** None beyond read-model caches; directives are stored by the receiving service.
-- **Notes.** `dashboard/` hosts the Phase 4 live-data dashboard. The UI is never a trust anchor; approvals are signed by the user's key where the phase requires.
+- **Notes.** The operator interface is an LLM-facing **terminal CLI** (`packages/cli`, `pnpm sb`), not a web dashboard. Paper/read-only in Phases 1–4: `--json` for agents, text tables for humans, exit 2 on a risk-governor veto. The CLI is never a trust anchor and never holds signing keys. Phase 5+ assisted-execution hooks (propose / simulate / request approval) are specified, not implemented.
 
 ### 5.11 Audit & monitoring layer (`services/audit-monitoring`)
 

@@ -1,0 +1,16 @@
+{
+  "schema": "shadow-banking.governor-snapshot.v1",
+  "asOf": "2026-10-21T00:00:00Z",
+  "navUsd": "800",
+  "equityUsd": "800",
+  "debtUsd": "2192.31",
+  "grossAssetsUsd": "2992.31",
+  "reserveHeldUsd": "50",
+  "reserveRequiredUsd": "200",
+  "healthFactor": "1.04",
+  "correlated": true,
+  "smallPosition": false,
+  "drawdown": "0",
+  "dailyPnl": "0",
+  "hurdle": "0.10"
+}

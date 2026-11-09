@@ -62,3 +62,11 @@ jobs:
           pnpm accounting report --json > /tmp/accounting-report.json
           pnpm accounting ledger --json > /tmp/accounting-ledger.json
           pnpm accounting allocate --json > /tmp/accounting-allocate.json
+
+      - name: Agent CLI smoke run (no network)
+        run: |
+          pnpm sb --help
+          pnpm sb status --json > /tmp/sb-status.json
+          pnpm sb risk --json --no-sim
+          pnpm sb strategy --json > /tmp/sb-strategy.json
+          pnpm sb accounting --json > /tmp/sb-accounting.json
