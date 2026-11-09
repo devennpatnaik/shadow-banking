@@ -56,9 +56,33 @@ importers:
       '@shadow-banking/accounting':
         specifier: workspace:*
         version: link:../accounting
+      '@shadow-banking/controller':
+        specifier: workspace:*
+        version: link:../controller
       '@shadow-banking/core':
         specifier: workspace:*
         version: link:../core
+      '@shadow-banking/risk':
+        specifier: workspace:*
+        version: link:../risk
+      '@shadow-banking/simulator':
+        specifier: workspace:*
+        version: link:../../simulator
+      '@shadow-banking/strategy':
+        specifier: workspace:*
+        version: link:../strategy
+
+  packages/controller:
+    dependencies:
+      '@shadow-banking/accounting':
+        specifier: workspace:*
+        version: link:../accounting
+      '@shadow-banking/core':
+        specifier: workspace:*
+        version: link:../core
+      '@shadow-banking/opportunity':
+        specifier: workspace:*
+        version: link:../opportunity
       '@shadow-banking/risk':
         specifier: workspace:*
         version: link:../risk

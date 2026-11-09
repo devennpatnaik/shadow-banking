@@ -717,6 +717,68 @@ export class Ledger {
     return { entry, borrowId, cashHoldingId };
   }
 
+  /** Repay debt from cash. Principal reduction is not expense; accrued interest already expensed. */
+  repay(args: {
+    at: string;
+    borrowId: string;
+    amount: Decimal;
+    cashHoldingId: string;
+    intentHash?: string;
+  }): JournalEntry {
+    const b = this.borrows.find((x) => x.id === args.borrowId);
+    if (!b) throw new Error(`unknown borrow ${args.borrowId}`);
+    const px = b.priceMark;
+    const want = args.amount;
+    const accrued = b.accruedInterest;
+    const againstAccrued = want.lt(accrued) ? want : accrued;
+    const remain = want.minus(againstAccrued);
+    const againstPrincipal = remain.lt(b.principal) ? remain : b.principal;
+    const repaidQty = againstAccrued.plus(againstPrincipal);
+    if (repaidQty.lte(0)) throw new RangeError('repay amount must be positive');
+    const usd = repaidQty.mul(px);
+    const { holding: cash } = this.reduceHolding(args.cashHoldingId, repaidQty);
+    b.accruedInterest = b.accruedInterest.minus(againstAccrued);
+    b.principal = b.principal.minus(againstPrincipal);
+    if (b.principal.plus(b.accruedInterest).lte(0)) {
+      this.borrows = this.borrows.filter((x) => x.id !== b.id);
+    }
+    const lines: JournalLine[] = [];
+    if (againstPrincipal.gt(0)) {
+      lines.push({
+        account: 'borrow_principal',
+        side: 'debit',
+        amount: againstPrincipal.mul(px),
+        quantity: againstPrincipal,
+        instrumentId: b.instrumentId,
+      });
+    }
+    if (againstAccrued.gt(0)) {
+      lines.push({
+        account: 'accrued_interest',
+        side: 'debit',
+        amount: againstAccrued.mul(px),
+        quantity: againstAccrued,
+        instrumentId: b.instrumentId,
+      });
+    }
+    lines.push({
+      account: GL_FOR_ROLE[cash.role],
+      side: 'credit',
+      amount: usd,
+      quantity: repaidQty,
+      instrumentId: b.instrumentId,
+      holdingId: args.cashHoldingId,
+    });
+    return this.post({
+      at: args.at,
+      kind: 'repay',
+      ...(args.intentHash ? { intentHash: args.intentHash } : {}),
+      memo: `Repay ${repaidQty.toString()} ${b.instrumentId} (principal is not expense)`,
+      instrumentId: b.instrumentId,
+      lines,
+    });
+  }
+
   accrueInterest(args: { at: string; borrowId: string; days: number }): JournalEntry {
     const b = this.borrows.find((x) => x.id === args.borrowId);
     if (!b) throw new Error(`unknown borrow ${args.borrowId}`);

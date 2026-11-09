@@ -21,11 +21,13 @@ pnpm opportunity show --json
 pnpm opportunity refresh --provider fixture --json
 pnpm risk state --json
 pnpm risk evaluate --json --fixture caution
+pnpm paper run --steps 7 --seed 1000 --json
+pnpm sb paper run --steps 7 --seed 1000 --json
 ```
 
-`pnpm sb` is the paper-book entrypoint (`packages/cli`). It wraps `@shadow-banking/core`, `@shadow-banking/simulator`, `@shadow-banking/strategy`, `@shadow-banking/accounting`, and `@shadow-banking/risk`. Market snapshots are refreshed with `pnpm opportunity` (`@shadow-banking/opportunity`) in fixture or live mode; CI uses `--provider fixture` (no network). If the strategy engine recommends preserve-capital, `noDeployment` is true — **do not invent a deployment**.
+`pnpm sb` is the paper-book entrypoint (`packages/cli`). It wraps `@shadow-banking/core`, `@shadow-banking/simulator`, `@shadow-banking/strategy`, `@shadow-banking/accounting`, `@shadow-banking/risk`, and `@shadow-banking/controller`. Market snapshots are refreshed with `pnpm opportunity` (`@shadow-banking/opportunity`) in fixture or live mode; CI uses `--provider fixture` (no network). Phase 4 paper loop: `pnpm paper run --steps N --seed 1000` (or `pnpm sb paper`). If the strategy engine recommends preserve-capital, `noDeployment` is true — **do not invent a deployment**.
 
-Dedicated governor CLI: `pnpm risk state` / `pnpm risk evaluate` (same veto semantics).
+Dedicated governor CLI: `pnpm risk state` / `pnpm risk evaluate` (same veto semantics). Paper controller: `pnpm paper run` / `pnpm paper show`.
 
 Every command accepts `--json` (machine-readable stdout). Default output is a text table for humans.
 
@@ -103,5 +105,6 @@ Assisted execution (user-approved intents), then limited automation, is specifie
 | [`docs/economics-1k.md`](docs/economics-1k.md)                     | Why $1k currently fails the hurdle   |
 | [`packages/opportunity/README.md`](packages/opportunity/README.md) | Live/fixture market snapshot refresh |
 | [`packages/risk/README.md`](packages/risk/README.md)               | Risk governor runtime and veto CLI   |
+| [`packages/controller/README.md`](packages/controller/README.md)   | Phase 4 paper portfolio controller   |
 
 Do not add a dashboard, web app, or GUI.

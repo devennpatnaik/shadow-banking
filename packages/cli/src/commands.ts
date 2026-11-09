@@ -16,6 +16,7 @@ import { banner, kvTable } from './format.js';
 import { DEFAULT_HURDLE } from './defaults.js';
 import { loadBook, loadProfile, loadRiskInput } from './load.js';
 import { cmdAccounting, cmdStrategy } from './engines.js';
+import { cmdPaper } from './paper.js';
 import { USAGE, flagOn, flagValue, type ParsedArgs } from './parse.js';
 import { actionCopy, evaluateGovernorSnapshot } from '@shadow-banking/risk';
 import {
@@ -48,6 +49,7 @@ export function cmdHelp(io: Io, json: boolean): number {
           'strategy',
           'accounting',
           'risk',
+          'paper',
         ],
         exitCodes: { 0: 'ok', 1: 'error', 2: 'risk veto' },
       }),
@@ -425,6 +427,8 @@ export function dispatch(io: Io, args: ParsedArgs): number {
       return cmdRisk(io, args);
     case 'status':
       return cmdStatus(io, args);
+    case 'paper':
+      return cmdPaper(io, args);
     default: {
       const _never: never = args.command;
       io.stderr.write(`unhandled command ${String(_never)}\n`);
