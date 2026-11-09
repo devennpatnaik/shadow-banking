@@ -57,6 +57,14 @@ jobs:
           pnpm strategy compare --snapshot docs/data/market-snapshot-2026-10-21.json --seed 1000
           pnpm strategy compare --snapshot docs/data/market-snapshot-2026-10-21.json --seed 1000 --json > /tmp/strategy.json
 
+      - name: Opportunity engine smoke run (fixture, no network)
+        run: |
+          pnpm opportunity help --json > /tmp/opportunity-help.json
+          pnpm opportunity show --snapshot docs/data/market-snapshot-2026-10-21.json --json > /tmp/opportunity-show.json
+          pnpm opportunity refresh --provider fixture --out /tmp/market-snapshot-fixture.json --json > /tmp/opportunity-refresh.json
+          pnpm strategy compare --snapshot /tmp/market-snapshot-fixture.json --seed 1000 --json > /tmp/strategy-from-refresh.json
+          pnpm sim run --snapshot /tmp/market-snapshot-fixture.json --network ethereum --collateral wstETH --borrow WETH --seed 1000 --format json > /tmp/sim-from-refresh.json
+
       - name: Accounting smoke run (no network)
         run: |
           pnpm accounting report --json > /tmp/accounting-report.json

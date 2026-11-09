@@ -2,7 +2,7 @@
 
 Read [`AGENTS.md`](../AGENTS.md) before running anything.
 
-- Interface: `pnpm sb <command> [--json]`. Terminal only. No web UI.
+- Interface: `pnpm sb <command> [--json]`. Terminal only. No web UI. Market data: `pnpm opportunity refresh|show [--json]`.
 - Parse `--json` stdout. Amounts are decimal strings.
 - Exit `2` / `veto: true` is a risk-governor veto. Stop. Do not bypass.
 - `noDeployment: true` or `recommendedAction: "hold_liquid"` → hold liquid capital. Do not deploy.

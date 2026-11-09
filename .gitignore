@@ -19,6 +19,7 @@ build/
 .nuxt/
 .turbo/
 coverage/
+.cache/
 *.tsbuildinfo
 
 # Python

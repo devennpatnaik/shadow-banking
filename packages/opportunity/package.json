@@ -1,0 +1,29 @@
+{
+  "name": "@shadow-banking/opportunity",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Opportunity engine: pluggable market-data providers that refresh docs/data/market-snapshot-<date>.json for the strategy engine and simulator. Read-only; fixture mode for CI.",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "bin": {
+    "opportunity": "./src/cli.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run --root ../.. packages/opportunity",
+    "cli": "tsx src/cli.ts"
+  },
+  "dependencies": {
+    "@shadow-banking/simulator": "workspace:*",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@shadow-banking/core": "workspace:*",
+    "@shadow-banking/strategy": "workspace:*"
+  }
+}

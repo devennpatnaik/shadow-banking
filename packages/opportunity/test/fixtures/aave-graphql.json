@@ -1,0 +1,92 @@
+{
+  "data": {
+    "markets": [
+      {
+        "name": "AaveV3Ethereum",
+        "chain": { "chainId": 1, "name": "Ethereum" },
+        "reserves": [
+          {
+            "underlyingToken": {
+              "symbol": "WETH",
+              "address": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+            },
+            "usdExchangeRate": "2140.01",
+            "supplyInfo": {
+              "apy": { "value": "0.01415858" },
+              "maxLTV": { "value": "0.81" },
+              "liquidationThreshold": { "value": "0.84" },
+              "liquidationBonus": { "value": "0.05" },
+              "canBeCollateral": true
+            },
+            "borrowInfo": {
+              "apy": { "value": "0.02034653" },
+              "borrowingState": "ENABLED",
+              "utilizationRate": { "value": "0.84" }
+            },
+            "eModeInfo": [
+              {
+                "categoryId": 1,
+                "label": "ETH correlated",
+                "maxLTV": { "value": "0.93" },
+                "liquidationThreshold": { "value": "0.95" },
+                "liquidationPenalty": { "value": "0.01" },
+                "canBeCollateral": true,
+                "canBeBorrowed": true
+              }
+            ]
+          },
+          {
+            "underlyingToken": {
+              "symbol": "wstETH",
+              "address": "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0"
+            },
+            "usdExchangeRate": "2672.33",
+            "supplyInfo": {
+              "apy": { "value": "0.00000185" },
+              "maxLTV": { "value": "0.79" },
+              "liquidationThreshold": { "value": "0.82" },
+              "liquidationBonus": { "value": "0.06" },
+              "canBeCollateral": true
+            },
+            "borrowInfo": {
+              "apy": { "value": "0.00018872" },
+              "borrowingState": "DISABLED",
+              "utilizationRate": { "value": "0.015" }
+            },
+            "eModeInfo": [
+              {
+                "categoryId": 1,
+                "label": "ETH correlated",
+                "maxLTV": { "value": "0.93" },
+                "liquidationThreshold": { "value": "0.95" },
+                "liquidationPenalty": { "value": "0.01" },
+                "canBeCollateral": true,
+                "canBeBorrowed": false
+              }
+            ]
+          },
+          {
+            "underlyingToken": {
+              "symbol": "USDC",
+              "address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+            },
+            "usdExchangeRate": "0.9998",
+            "supplyInfo": {
+              "apy": { "value": "0.03775" },
+              "maxLTV": { "value": "0" },
+              "liquidationThreshold": { "value": "0.78" },
+              "liquidationBonus": { "value": "0.045" },
+              "canBeCollateral": false
+            },
+            "borrowInfo": {
+              "apy": { "value": "0.04539" },
+              "borrowingState": "ENABLED",
+              "utilizationRate": { "value": "0.92" }
+            },
+            "eModeInfo": []
+          }
+        ]
+      }
+    ]
+  }
+}

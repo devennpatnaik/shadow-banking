@@ -2,7 +2,7 @@
 
 An AI-managed personal shadow-banking platform: software that lets an individual operate a managed financial balance sheet of the kind normally run by banks, hedge funds, and institutional treasuries.
 
-> **Status:** TypeScript/pnpm monorepo with a consolidated balance-sheet model (`packages/core`), recursive borrowing simulator (`simulator/`), strategy economics engine (`packages/strategy`), accounting ledger (`packages/accounting`), and an LLM-facing terminal CLI (`packages/cli`). See [Getting started](#getting-started). No web UI.
+> **Status:** TypeScript/pnpm monorepo with a consolidated balance-sheet model (`packages/core`), recursive borrowing simulator (`simulator/`), strategy economics engine (`packages/strategy`), opportunity engine (`packages/opportunity`), accounting ledger (`packages/accounting`), and an LLM-facing terminal CLI (`packages/cli`). See [Getting started](#getting-started). No web UI.
 
 The full product specification lives in [`docs/spec.md`](docs/spec.md).
 
@@ -26,6 +26,8 @@ pnpm sim run --preset aave-v3-ethereum-wsteth-eth-emode --seed 1000
 pnpm sim compare --seed 1000
 pnpm strategy compare --snapshot docs/data/market-snapshot-2026-10-21.json --seed 1000
 pnpm strategy compare --snapshot docs/data/market-snapshot-2026-10-21.json --seed 1000 --json
+pnpm opportunity refresh --provider fixture --json
+pnpm opportunity show --json
 pnpm accounting report
 pnpm accounting ledger --json
 ```
@@ -36,9 +38,10 @@ Read [`AGENTS.md`](AGENTS.md) (and [`.claude/CLAUDE.md`](.claude/CLAUDE.md)) bef
 - [`packages/core`](packages/core/) — consolidated balance-sheet model (disclosures, T0–T3 liquidity tiers, NAV, health factor, deployable capital).
 - [`simulator/`](simulator/) — recursive collateralized-borrowing simulator. All printed APYs are **estimates** from a dated snapshot, not realized returns. Default hurdle: 10% annualized net, configurable.
 - [`packages/strategy`](packages/strategy/) — strategy economics and risk comparison (hold LST, 2x/3x loop, hedged carry, optional LP, preserve-liquid). CLI tables plus `--json`. Default hurdle: 10% annualized net, configurable, not a promise.
+- [`packages/opportunity`](packages/opportunity/) — market-snapshot refresh (fixture + live Aave/LST/Hyperliquid). Read-only. `pnpm opportunity refresh` / `show`.
 - [`packages/accounting`](packages/accounting/) — double-entry ledger and consolidated performance report (CLI). Borrowed principal is not income; annualized yield is labeled an estimate.
 
-CI (`.github/workflows/ci.yml`) runs typecheck, lint, format check, tests, and simulator/strategy/accounting/CLI smoke runs on Node 20 and 22.
+CI (`.github/workflows/ci.yml`) runs typecheck, lint, format check, tests, and simulator/strategy/opportunity/accounting/CLI smoke runs on Node 20 and 22.
 
 ## Documentation
 
@@ -89,6 +92,7 @@ Workspaces alongside the services:
 - [`packages/core`](packages/core/) — balance-sheet and disclosure engines (Phase 1).
 - [`simulator/`](simulator/) — recursive collateral-and-borrowing loop (Phase 2).
 - [`packages/strategy`](packages/strategy/) — strategy economics and risk comparison (spec §14.5).
+- [`packages/opportunity`](packages/opportunity/) — opportunity engine / market snapshots (spec §14 / Phase 3 data).
 - [`packages/accounting`](packages/accounting/) — ledger and performance report (spec §14.7). Text CLI; no web UI.
 - [`packages/cli`](packages/cli/) — agent-facing terminal interface (replaces a live-data dashboard). Paper/read-only.
 - [`dashboard/`](dashboard/) — placeholder; live output is CLI/structured text, not a graphical dashboard.
@@ -166,6 +170,7 @@ The risk governor is designed to prioritize survival over yield and to reject or
 ├── packages/
 │   ├── core/                # balance-sheet domain model
 │   ├── strategy/            # strategy economics + risk comparison
+│   ├── opportunity/         # market snapshot refresh (fixture + live)
 │   ├── accounting/          # ledger + performance CLI
 │   └── cli/                 # LLM-facing CLI (no web UI)
 ├── services/
