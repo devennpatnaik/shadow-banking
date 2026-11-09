@@ -81,6 +81,12 @@ jobs:
           test "$code" -eq 2
           pnpm sb risk --json --no-sim
 
+      - name: Paper controller smoke run (fixture, no network)
+        run: |
+          pnpm paper help --json > /tmp/paper-help.json
+          pnpm paper run --steps 3 --seed 1000 --provider fixture --state-dir /tmp/paper-run --json > /tmp/paper-run.json
+          pnpm sb paper run --steps 2 --seed 1000 --json --state-dir /tmp/sb-paper-run > /tmp/sb-paper.json
+
       - name: Agent CLI smoke run (no network)
         run: |
           pnpm sb --help
@@ -88,3 +94,4 @@ jobs:
           pnpm sb risk --json --no-sim
           pnpm sb strategy --json > /tmp/sb-strategy.json
           pnpm sb accounting --json > /tmp/sb-accounting.json
+          pnpm sb paper --help --json > /tmp/sb-paper-help.json

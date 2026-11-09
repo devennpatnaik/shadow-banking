@@ -2,7 +2,7 @@
   "name": "shadow-banking",
   "version": "0.1.0",
   "private": true,
-  "description": "AI-managed personal shadow-banking platform: consolidated balance-sheet model, recursive collateralized borrowing simulator, strategy economics engine, opportunity-engine market snapshots, and risk governor.",
+  "description": "AI-managed personal shadow-banking platform: consolidated balance-sheet model, recursive collateralized borrowing simulator, strategy economics engine, opportunity-engine market snapshots, risk governor, and paper portfolio controller.",
   "type": "module",
   "packageManager": "pnpm@10.33.4",
   "engines": {
@@ -20,6 +20,7 @@
     "accounting": "tsx packages/accounting/src/cli.ts",
     "opportunity": "tsx packages/opportunity/src/cli.ts",
     "risk": "tsx packages/risk/src/cli.ts",
+    "paper": "tsx packages/controller/src/cli.ts",
     "sb": "tsx packages/cli/src/cli.ts",
     "check": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm test"
   },

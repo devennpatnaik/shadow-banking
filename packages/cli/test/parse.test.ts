@@ -22,6 +22,11 @@ describe('parseArgs', () => {
     expect(p.json).toBe(true);
   });
 
+  it('maps paper / controller aliases', () => {
+    expect(parseArgs(['paper', 'run', '--steps', '3']).command).toBe('paper');
+    expect(parseArgs(['controller', '--json']).command).toBe('paper');
+  });
+
   it('records unknown commands', () => {
     const p = parseArgs(['dashboard']);
     expect(p.command).toBeNull();

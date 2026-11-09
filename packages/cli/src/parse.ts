@@ -1,5 +1,13 @@
 export type CommandName =
-  'help' | 'balance-sheet' | 'disclosures' | 'sim' | 'strategy' | 'accounting' | 'risk' | 'status';
+  | 'help'
+  | 'balance-sheet'
+  | 'disclosures'
+  | 'sim'
+  | 'strategy'
+  | 'accounting'
+  | 'risk'
+  | 'status'
+  | 'paper';
 
 export const COMMANDS: readonly CommandName[] = [
   'help',
@@ -10,6 +18,7 @@ export const COMMANDS: readonly CommandName[] = [
   'accounting',
   'risk',
   'status',
+  'paper',
 ];
 
 const ALIASES: Record<string, CommandName> = {
@@ -27,6 +36,8 @@ const ALIASES: Record<string, CommandName> = {
   accounting: 'accounting',
   risk: 'risk',
   status: 'status',
+  paper: 'paper',
+  controller: 'paper',
 };
 
 export interface ParsedArgs {
@@ -125,6 +136,7 @@ Commands:
   strategy         Strategy economics engine (@shadow-banking/strategy)
   accounting       Accounting ledger (@shadow-banking/accounting)
   risk             Risk governor (@shadow-banking/risk): state / evaluate / veto
+  paper            Phase 4 paper controller loop (@shadow-banking/controller)
 
 Global:
   --json           Machine-readable JSON on stdout (default is a text table)

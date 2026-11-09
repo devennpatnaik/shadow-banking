@@ -56,6 +56,35 @@ describe('double-entry ledger', () => {
     expectDec(l.incomeTotal(), '0');
   });
 
+  it('repay reduces debt without counting as income or expense of principal', () => {
+    const l = fresh();
+    l.seed({
+      at: '2026-01-01T00:00:00Z',
+      amount: d(1000),
+      venueAccountId: 'wallet',
+      instrumentId: 'USDC',
+    });
+    const { cashHoldingId } = l.borrow({
+      at: '2026-01-01T00:00:00Z',
+      amount: d(400),
+      instrumentId: 'USDC',
+      venueAccountId: 'aave',
+      cashVenueAccountId: 'wallet',
+      apr: d('0.05'),
+      venue: 'Aave v3',
+    });
+    l.repay({
+      at: '2026-01-02T00:00:00Z',
+      borrowId: l.getBorrows()[0]!.id,
+      amount: d(400),
+      cashHoldingId,
+    });
+    expectDec(l.nav(), '1000');
+    expectDec(l.totalDebt(), '0');
+    expectDec(l.netPnl(), '0');
+    expectDec(l.incomeTotal(), '0');
+  });
+
   it('does not treat inter-account transfers as profit', () => {
     const l = fresh();
     l.seed({

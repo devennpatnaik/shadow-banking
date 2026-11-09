@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@shadow-banking/accounting": "workspace:*",
+    "@shadow-banking/controller": "workspace:*",
     "@shadow-banking/core": "workspace:*",
     "@shadow-banking/risk": "workspace:*",
     "@shadow-banking/simulator": "workspace:*",

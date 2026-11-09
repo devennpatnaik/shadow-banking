@@ -1,3 +1,5 @@
+import { mkdtempSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
@@ -110,6 +112,31 @@ describe('JSON shapes', () => {
     expect(strategy['noDeployment']).toBe(true);
     expect(strategy['recommendedAction']).toBe('hold_liquid');
     expect(accounting['nav']).toBeTruthy();
+  });
+
+  it('paper --json holds liquid at $1k / 10% hurdle', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'sb-cli-paper-'));
+    const r = capture([
+      'paper',
+      'run',
+      '--json',
+      '--steps',
+      '2',
+      '--seed',
+      '1000',
+      '--state-dir',
+      dir,
+    ]);
+    expect(r.code).toBe(EXIT_OK);
+    const json = parseStdoutJson(r.stdout);
+    expectEnvelope(json, 'paper');
+    expect(json['source']).toBe('@shadow-banking/controller');
+    expect(json['posture']).toBe('hold_liquid');
+    expect(json['noDeployment']).toBe(true);
+    expect(json['veto']).toBe(false);
+    expect(json['nav']).toBe('1000');
+    expect(json['debt']).toBe('0');
+    expect(String(json['headline'])).toMatch(/HOLD LIQUID/);
   });
 
   it('risk --json on the default paper book is Normal / no veto', () => {
