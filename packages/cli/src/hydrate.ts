@@ -9,6 +9,7 @@ import {
   type Holding,
   type Liability,
 } from '@shadow-banking/core';
+import type { GovernorSnapshot } from '@shadow-banking/risk';
 
 function obj(value: unknown, label: string): Record<string, unknown> {
   if (value === null || typeof value !== 'object' || Array.isArray(value)) {
@@ -180,22 +181,7 @@ export function hydrateBalanceSheet(raw: unknown): BalanceSheet {
 
 type RateType = Liability['rateType'];
 
-export interface GovernorSnapshot {
-  asOf: string;
-  navUsd: Decimal;
-  equityUsd: Decimal;
-  debtUsd: Decimal;
-  grossAssetsUsd: Decimal;
-  reserveHeldUsd: Decimal;
-  reserveRequiredUsd: Decimal;
-  healthFactor: Decimal | null;
-  correlated: boolean;
-  smallPosition: boolean;
-  drawdown: Decimal;
-  dailyPnl: Decimal;
-  hurdle: Decimal;
-  netCarry: Decimal | null;
-}
+export type { GovernorSnapshot };
 
 export function hydrateGovernorSnapshot(raw: unknown): GovernorSnapshot {
   const o = obj(raw, 'governor snapshot');

@@ -117,6 +117,7 @@ describe('JSON shapes', () => {
     expect(r.code).toBe(EXIT_OK);
     const json = parseStdoutJson(r.stdout);
     expectEnvelope(json, 'risk');
+    expect(json['engine']).toBe('@shadow-banking/risk');
     expect(json['state']).toBe('Normal');
     expect(json['veto']).toBe(false);
     expect(json['metrics']).toEqual(

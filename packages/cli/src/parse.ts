@@ -124,7 +124,7 @@ Commands:
   sim              Wrap the recursive-loop simulator (presets | run | compare | stress)
   strategy         Strategy economics engine (@shadow-banking/strategy)
   accounting       Accounting ledger (@shadow-banking/accounting)
-  risk             Risk state from docs/risk-governor.md given a book or snapshot
+  risk             Risk governor (@shadow-banking/risk): state / evaluate / veto
 
 Global:
   --json           Machine-readable JSON on stdout (default is a text table)

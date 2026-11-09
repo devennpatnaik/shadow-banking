@@ -1,0 +1,25 @@
+{
+  "name": "@shadow-banking/risk",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Risk governor: Normal/Caution/Deleveraging/Emergency state machine, hard-limit vetoes, paper CLI. Survival over yield. No live execution.",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "bin": {
+    "risk": "./src/cli.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run --root ../.. packages/risk",
+    "cli": "tsx src/cli.ts"
+  },
+  "dependencies": {
+    "@shadow-banking/core": "workspace:*",
+    "decimal.js": "^10.6.0"
+  }
+}

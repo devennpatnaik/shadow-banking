@@ -71,6 +71,16 @@ jobs:
           pnpm accounting ledger --json > /tmp/accounting-ledger.json
           pnpm accounting allocate --json > /tmp/accounting-allocate.json
 
+      - name: Risk governor smoke run (no network)
+        run: |
+          pnpm risk state --json --fixture normal
+          set +e
+          pnpm risk evaluate --json --fixture emergency > /tmp/risk-emerg.json
+          code=$?
+          set -e
+          test "$code" -eq 2
+          pnpm sb risk --json --no-sim
+
       - name: Agent CLI smoke run (no network)
         run: |
           pnpm sb --help
