@@ -48,6 +48,21 @@ importers:
         specifier: ^3.25.76
         version: 3.25.76
 
+  packages/strategy:
+    dependencies:
+      '@shadow-banking/core':
+        specifier: workspace:*
+        version: link:../core
+      '@shadow-banking/simulator':
+        specifier: workspace:*
+        version: link:../../simulator
+      decimal.js:
+        specifier: ^10.6.0
+        version: 10.6.0
+      zod:
+        specifier: ^3.25.76
+        version: 3.25.76
+
   simulator:
     dependencies:
       '@shadow-banking/core':
