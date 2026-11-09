@@ -99,8 +99,8 @@ describe('JSON shapes', () => {
   });
 
   it('strategy and accounting wrap the real packages', () => {
-    const strategy = parseStdoutJson((capture(['strategy', '--json'])).stdout);
-    const accounting = parseStdoutJson((capture(['accounting', '--json'])).stdout);
+    const strategy = parseStdoutJson(capture(['strategy', '--json']).stdout);
+    const accounting = parseStdoutJson(capture(['accounting', '--json']).stdout);
     expectEnvelope(strategy, 'strategy');
     expectEnvelope(accounting, 'accounting');
     expect(strategy['stub']).toBe(false);

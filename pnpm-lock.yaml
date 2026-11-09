@@ -75,6 +75,22 @@ importers:
         specifier: ^3.25.76
         version: 3.25.76
 
+  packages/opportunity:
+    dependencies:
+      '@shadow-banking/simulator':
+        specifier: workspace:*
+        version: link:../../simulator
+      zod:
+        specifier: ^3.25.76
+        version: 3.25.76
+    devDependencies:
+      '@shadow-banking/core':
+        specifier: workspace:*
+        version: link:../core
+      '@shadow-banking/strategy':
+        specifier: workspace:*
+        version: link:../strategy
+
   packages/strategy:
     dependencies:
       '@shadow-banking/core':

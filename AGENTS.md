@@ -17,9 +17,11 @@ pnpm sb sim --json --preset aave-v3-ethereum-wsteth-eth-emode --seed 1000
 pnpm sb risk --json
 pnpm sb strategy --json
 pnpm sb accounting --json
+pnpm opportunity show --json
+pnpm opportunity refresh --provider fixture --json
 ```
 
-`pnpm sb` is the single entrypoint (`packages/cli`). It wraps `@shadow-banking/core`, `@shadow-banking/simulator`, `@shadow-banking/strategy`, and `@shadow-banking/accounting`. If the strategy engine recommends preserve-capital, `noDeployment` is true — **do not invent a deployment**.
+`pnpm sb` is the paper-book entrypoint (`packages/cli`). It wraps `@shadow-banking/core`, `@shadow-banking/simulator`, `@shadow-banking/strategy`, and `@shadow-banking/accounting`. Market snapshots are refreshed with `pnpm opportunity` (`@shadow-banking/opportunity`) in fixture or live mode; CI uses `--provider fixture` (no network). If the strategy engine recommends preserve-capital, `noDeployment` is true — **do not invent a deployment**.
 
 Every command accepts `--json` (machine-readable stdout). Default output is a text table for humans.
 
@@ -89,11 +91,12 @@ Assisted execution (user-approved intents), then limited automation, is specifie
 
 ## Docs map
 
-| File                                             | Why you open it                    |
-| ------------------------------------------------ | ---------------------------------- |
-| [`docs/spec.md`](docs/spec.md)                   | Product spec                       |
-| [`docs/architecture.md`](docs/architecture.md)   | Components and trust boundaries    |
-| [`docs/risk-governor.md`](docs/risk-governor.md) | Limits, states, veto, unwind       |
-| [`docs/economics-1k.md`](docs/economics-1k.md)   | Why $1k currently fails the hurdle |
+| File                                                               | Why you open it                      |
+| ------------------------------------------------------------------ | ------------------------------------ |
+| [`docs/spec.md`](docs/spec.md)                                     | Product spec                         |
+| [`docs/architecture.md`](docs/architecture.md)                     | Components and trust boundaries      |
+| [`docs/risk-governor.md`](docs/risk-governor.md)                   | Limits, states, veto, unwind         |
+| [`docs/economics-1k.md`](docs/economics-1k.md)                     | Why $1k currently fails the hurdle   |
+| [`packages/opportunity/README.md`](packages/opportunity/README.md) | Live/fixture market snapshot refresh |
 
 Do not add a dashboard, web app, or GUI.
