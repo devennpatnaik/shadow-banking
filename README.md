@@ -2,20 +2,38 @@
 
 An AI-managed personal shadow-banking platform: software that lets an individual operate a managed financial balance sheet of the kind normally run by banks, hedge funds, and institutional treasuries.
 
-> **Status:** scaffold only. No language or framework stack has been chosen yet. See [Build sequence](#build-sequence) for where this is headed.
+> **Status:** TypeScript/pnpm monorepo with a consolidated balance-sheet model (`packages/core`) and recursive borrowing simulator (`simulator/`). See [Getting started](#getting-started).
 
 The full product specification lives in [`docs/spec.md`](docs/spec.md).
 
 ---
 
+## Getting started
+
+Stack: **TypeScript**, Node 20+ LTS, **pnpm** workspaces, strict TypeScript, **vitest**, **decimal.js** for every balance and rate. One language across the engines, dashboard, and the Aave / Hyperliquid SDK ecosystems. Floating point is never used for money.
+
+```bash
+corepack enable
+pnpm install
+pnpm typecheck
+pnpm test
+pnpm sim run --preset aave-v3-ethereum-wsteth-eth-emode --seed 1000
+pnpm sim compare --seed 1000
+```
+
+- [`packages/core`](packages/core/) — consolidated balance-sheet model (disclosures, T0–T3 liquidity tiers, NAV, health factor, deployable capital).
+- [`simulator/`](simulator/) — recursive collateralized-borrowing simulator. All printed APYs are **estimates** from a dated snapshot, not realized returns. Default hurdle: 10% annualized net, configurable.
+
+CI (`.github/workflows/ci.yml`) runs typecheck, lint, format check, tests, and a simulator smoke run on Node 20 and 22.
+
 ## Documentation
 
-| Document | Spec deliverable | Contents |
-| --- | --- | --- |
-| [`docs/architecture.md`](docs/architecture.md) | §14.1 | Component map, data flow, trust boundaries, module responsibilities, domain model |
-| [`docs/integrations.md`](docs/integrations.md) | §14.2 | Inventory of account integrations, protocol interfaces, APIs, SDKs, and MCP servers, with sources and dates |
-| [`docs/risk-governor.md`](docs/risk-governor.md) | §14.8 | Monitored metrics, risk states, hard limits, veto semantics, emergency unwind playbooks, fail-safes, monitoring |
-| [`docs/implementation-plan.md`](docs/implementation-plan.md) | §14.9 | Milestones, deliverables, and exit criteria for the seven phases, with a dependency graph |
+| Document                                                     | Spec deliverable | Contents                                                                                                        |
+| ------------------------------------------------------------ | ---------------- | --------------------------------------------------------------------------------------------------------------- |
+| [`docs/architecture.md`](docs/architecture.md)               | §14.1            | Component map, data flow, trust boundaries, module responsibilities, domain model                               |
+| [`docs/integrations.md`](docs/integrations.md)               | §14.2            | Inventory of account integrations, protocol interfaces, APIs, SDKs, and MCP servers, with sources and dates     |
+| [`docs/risk-governor.md`](docs/risk-governor.md)             | §14.8            | Monitored metrics, risk states, hard limits, veto semantics, emergency unwind playbooks, fail-safes, monitoring |
+| [`docs/implementation-plan.md`](docs/implementation-plan.md) | §14.9            | Milestones, deliverables, and exit criteria for the seven phases, with a dependency graph                       |
 
 ---
 
@@ -39,18 +57,18 @@ This is **not** a trading bot, a robo-advisor, a portfolio tracker, or a yield a
 
 The platform is built as ten modular services. Each has a placeholder in [`services/`](services/).
 
-| Module | Directory | Responsibility |
-| --- | --- | --- |
-| Account & disclosure layer | [`services/account-disclosure`](services/account-disclosure/) | Ingests financial data, user constraints, and available balances. Read-only by default. |
-| Balance-sheet engine | [`services/balance-sheet-engine`](services/balance-sheet-engine/) | Reconciles assets, liabilities, equity, collateral, and available borrowing capacity. |
-| Opportunity engine | [`services/opportunity-engine`](services/opportunity-engine/) | Collects current yield, borrowing, funding, liquidity, and risk data. |
-| Strategy engine | [`services/strategy-engine`](services/strategy-engine/) | Models recursive borrowing, leveraged productive assets, hedged carry, and optional liquidity provision. |
-| Risk governor | [`services/risk-governor`](services/risk-governor/) | Enforces hard limits and controls emergency actions. Has authority over strategy and execution. |
-| Execution layer | [`services/execution-layer`](services/execution-layer/) | Submits approved transactions, repayments, withdrawals, and hedges via official APIs/SDKs. |
-| Accounting engine | [`services/accounting-engine`](services/accounting-engine/) | Maintains the ledger and calculates NAV and net performance. |
-| Portfolio controller | [`services/portfolio-controller`](services/portfolio-controller/) | Determines allocations, reserves, debt repayment, and compounding. |
-| User interface | [`services/user-interface`](services/user-interface/) | Shows the balance sheet, yield sources, debt, risk, performance, and proposed actions. |
-| Audit & monitoring layer | [`services/audit-monitoring`](services/audit-monitoring/) | Records decisions, transactions, data sources, failures, and risk interventions. |
+| Module                     | Directory                                                         | Responsibility                                                                                           |
+| -------------------------- | ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Account & disclosure layer | [`services/account-disclosure`](services/account-disclosure/)     | Ingests financial data, user constraints, and available balances. Read-only by default.                  |
+| Balance-sheet engine       | [`services/balance-sheet-engine`](services/balance-sheet-engine/) | Reconciles assets, liabilities, equity, collateral, and available borrowing capacity.                    |
+| Opportunity engine         | [`services/opportunity-engine`](services/opportunity-engine/)     | Collects current yield, borrowing, funding, liquidity, and risk data.                                    |
+| Strategy engine            | [`services/strategy-engine`](services/strategy-engine/)           | Models recursive borrowing, leveraged productive assets, hedged carry, and optional liquidity provision. |
+| Risk governor              | [`services/risk-governor`](services/risk-governor/)               | Enforces hard limits and controls emergency actions. Has authority over strategy and execution.          |
+| Execution layer            | [`services/execution-layer`](services/execution-layer/)           | Submits approved transactions, repayments, withdrawals, and hedges via official APIs/SDKs.               |
+| Accounting engine          | [`services/accounting-engine`](services/accounting-engine/)       | Maintains the ledger and calculates NAV and net performance.                                             |
+| Portfolio controller       | [`services/portfolio-controller`](services/portfolio-controller/) | Determines allocations, reserves, debt repayment, and compounding.                                       |
+| User interface             | [`services/user-interface`](services/user-interface/)             | Shows the balance sheet, yield sources, debt, risk, performance, and proposed actions.                   |
+| Audit & monitoring layer   | [`services/audit-monitoring`](services/audit-monitoring/)         | Records decisions, transactions, data sources, failures, and risk interventions.                         |
 
 Two top-level workspaces sit alongside the services:
 
@@ -63,15 +81,15 @@ Two top-level workspaces sit alongside the services:
 
 Development is incremental. Each phase must be reliable before the next begins.
 
-| Phase | Name | Scope |
-| --- | --- | --- |
-| 1 | Read-only financial model | Connect data sources, ingest disclosures, build the consolidated balance sheet. No transactions. |
-| 2 | Shadow-bank simulator | Model the recursive collateral-and-borrowing loop for at least two asset ecosystems. Compute leverage, net yield, equity, liquidation risk. |
-| 3 | Opportunity & risk engine | Compare strategies on current and historical data. Implement reserves, risk limits, stress tests, and a no-deployment state. |
-| 4 | Paper operation | Run the full controller on live data with no real transactions. Track hypothetical NAV, debt, income, costs, drawdowns. |
-| 5 | Assisted execution | Propose specific actions for user approval. Verify transaction construction, accounting, repayments, unwinds. |
-| 6 | Limited automation | Deploy a small authorized allocation with hard-coded limits, independent risk controls, monitoring, and emergency shutdown. |
-| 7 | Broader management | Expand strategies and automation only after reliable accounting, execution, and risk handling are demonstrated. |
+| Phase | Name                      | Scope                                                                                                                                       |
+| ----- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1     | Read-only financial model | Connect data sources, ingest disclosures, build the consolidated balance sheet. No transactions.                                            |
+| 2     | Shadow-bank simulator     | Model the recursive collateral-and-borrowing loop for at least two asset ecosystems. Compute leverage, net yield, equity, liquidation risk. |
+| 3     | Opportunity & risk engine | Compare strategies on current and historical data. Implement reserves, risk limits, stress tests, and a no-deployment state.                |
+| 4     | Paper operation           | Run the full controller on live data with no real transactions. Track hypothetical NAV, debt, income, costs, drawdowns.                     |
+| 5     | Assisted execution        | Propose specific actions for user approval. Verify transaction construction, accounting, repayments, unwinds.                               |
+| 6     | Limited automation        | Deploy a small authorized allocation with hard-coded limits, independent risk controls, monitoring, and emergency shutdown.                 |
+| 7     | Broader management        | Expand strategies and automation only after reliable accounting, execution, and risk handling are demonstrated.                             |
 
 **Unrestricted autonomous deployment is never a phase.**
 
