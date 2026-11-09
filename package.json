@@ -18,6 +18,7 @@
     "sim": "tsx simulator/src/cli.ts",
     "strategy": "tsx packages/strategy/src/cli.ts",
     "accounting": "tsx packages/accounting/src/cli.ts",
+    "sb": "tsx packages/cli/src/cli.ts",
     "check": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm test"
   },
   "devDependencies": {

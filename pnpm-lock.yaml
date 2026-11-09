@@ -51,6 +51,21 @@ importers:
         specifier: ^3.25.76
         version: 3.25.76
 
+  packages/cli:
+    dependencies:
+      '@shadow-banking/accounting':
+        specifier: workspace:*
+        version: link:../accounting
+      '@shadow-banking/core':
+        specifier: workspace:*
+        version: link:../core
+      '@shadow-banking/simulator':
+        specifier: workspace:*
+        version: link:../../simulator
+      '@shadow-banking/strategy':
+        specifier: workspace:*
+        version: link:../strategy
+
   packages/core:
     dependencies:
       decimal.js:

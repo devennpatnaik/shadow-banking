@@ -1,0 +1,27 @@
+{
+  "name": "@shadow-banking/cli",
+  "version": "0.1.0",
+  "private": true,
+  "description": "LLM-facing paper/read-only CLI for the shadow-banking engines. No web UI, no signing keys, no live execution.",
+  "type": "module",
+  "bin": {
+    "sb": "./src/cli.ts"
+  },
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run --root ../.. packages/cli",
+    "cli": "tsx src/cli.ts"
+  },
+  "dependencies": {
+    "@shadow-banking/accounting": "workspace:*",
+    "@shadow-banking/core": "workspace:*",
+    "@shadow-banking/simulator": "workspace:*",
+    "@shadow-banking/strategy": "workspace:*"
+  }
+}

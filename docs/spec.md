@@ -417,7 +417,7 @@ Produce:
 3. A consolidated balance-sheet model.
 4. A simulator for recursive collateralized borrowing.
 5. A strategy economics and risk-comparison engine.
-6. A live-data dashboard.
+6. An LLM-compatible terminal CLI (`pnpm sb`) for status, balance sheet, simulation, and risk — not a web dashboard.
 7. An accounting ledger and performance report.
 8. A risk governor and emergency-action specification.
 9. A phased implementation plan.

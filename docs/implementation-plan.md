@@ -16,7 +16,7 @@ Work on Phases 1–3 has started in parallel because they are read-only, share o
 | ~$1k economics assessment | Whether the loop clears the hurdle at seed scale once gas, swap slippage, venue minimums, bridging, and liquidation rules are included (spec §14.10) | `docs/economics-1k.md` with supporting data under `docs/data/` (separate PR) |
 | Design documents | This plan, architecture, integrations inventory, risk governor specification (spec §14.1, 2, 8, 9) | `docs/` (this PR) |
 
-The remaining initial deliverables (§14.3–7: balance-sheet model, simulator, strategy economics engine, live dashboard, accounting ledger) are produced inside Phases 1–4 below.
+The remaining initial deliverables (§14.3–7: balance-sheet model, simulator, strategy economics engine, agent CLI in place of a live dashboard, accounting ledger) are produced inside Phases 1–4 below.
 
 ---
 
@@ -83,11 +83,11 @@ Risks: incomplete historical data for L2 markets; over-fitting thresholds to pas
 | P4.1 Live ingestion loop | Continuous account and market ingestion with freshness SLOs; governor running as a separate process with its own feeds and RPC provider | Freshness SLOs in `risk-governor.md` §8.1 met for 30 consecutive days |
 | P4.2 Accounting engine v1 | Double-entry ledger, NAV, realized vs. unrealized, net annualized yield, financing costs, drawdown; synthetic receipts from the dry-run executor | Ledger reconciles to the simulated positions daily; borrowed principal and transfers never counted as income |
 | P4.3 Execution layer in dry-run mode | Transaction construction with official SDKs, mandatory simulation (local fork and `eth_simulateV1`), expected-post-state checks, synthetic receipts; Hyperliquid order construction against testnet | Every paper action has a simulated post-state within tolerance; testnet orders accepted |
-| P4.4 Live-data dashboard | Balance sheet, yield sources (gross, estimated net, realized net), debt, risk state and distances, performance, proposals with explanations, custody status | Dashboard shows the paper book end-to-end; alerting channels tested |
+| P4.4 Agent CLI (replaces live-data dashboard) | `pnpm sb` one-screen status plus balance-sheet, disclosures, sim, risk, strategy/accounting stubs; `--json` and veto exit codes | Agent can read NAV/equity/debt/reserves/HF/hurdle/action from `pnpm sb status --json`; no web UI |
 | P4.5 Fire drills | Each unwind playbook executed in paper mode monthly; kill switch levels exercised | Drill reports in the audit log with time-to-safety |
 | P4.6 Paper track record | Hypothetical NAV, debt, income, costs, drawdown, realized-vs-projected comparison | Three consecutive months with zero would-be liquidations and alert SLOs met (`risk-governor.md` §9.2) |
 
-Modules: all ten plus signer stub (no keys), data store, dashboard. Integrations: 5, 10, 12, 14, 15 (testnet), 16, 22, 24, 25, 26.
+Modules: all ten plus signer stub (no keys), data store, agent CLI. Integrations: 5, 10, 12, 14, 15 (testnet), 16, 22, 24, 25, 26.
 
 Risks: paper execution hides slippage and failed-transaction realities (mitigated by conservative cost assumptions and testnet orders).
 
