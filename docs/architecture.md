@@ -324,7 +324,7 @@ Each module is a separately deployable service or worker with the responsibility
 - **Inputs.** Authorized `ActionIntent`s, `MarketSnapshot` (for routing, slippage), user approvals, RPC/venue endpoints.
 - **Outputs.** `ExecutionReceipt`s, failure reports, pending-transaction state.
 - **Persistence.** Intent → tx mapping, nonces, submitted payloads, receipts, retries.
-- **Notes.** Holds no keys. Supports dry-run mode (Phase 4) where everything up to signing runs and the receipt is synthetic. Idempotent by intent hash.
+- **Notes.** Holds no keys. Phase 4 dry-run used synthetic receipts. Phase 5 is implemented in `packages/execution` (`pnpm execution propose|show|approve|reject`): construct, mock/`eth_simulateV1` dry-run, user approval on disk. Broadcast is refused until Phase 6. Idempotent by intent hash.
 
 ### 5.7 Signer (part of execution plane, isolated)
 
@@ -356,7 +356,7 @@ Each module is a separately deployable service or worker with the responsibility
 - **Inputs.** Read models from accounting, balance-sheet, governor, controller.
 - **Outputs.** `UserDirective`s; nothing else.
 - **Persistence.** None beyond read-model caches; directives are stored by the receiving service.
-- **Notes.** The operator interface is an LLM-facing **terminal CLI** (`packages/cli`, `pnpm sb`), not a web dashboard. Paper/read-only in Phases 1–4: `--json` for agents, text tables for humans, exit 2 on a risk-governor veto. The CLI is never a trust anchor and never holds signing keys. Phase 5+ assisted-execution hooks (propose / simulate / request approval) are specified, not implemented.
+- **Notes.** The operator interface is an LLM-facing **terminal CLI** (`packages/cli`, `pnpm sb`), not a web dashboard. `--json` for agents, text tables for humans, exit 2 on a risk-governor veto. The CLI is never a trust anchor and never holds signing keys. Phase 5: `pnpm execution` / `pnpm sb execution` propose + approve only; no live transactions.
 
 ### 5.11 Audit & monitoring layer (`services/audit-monitoring`)
 

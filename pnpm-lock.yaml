@@ -62,6 +62,9 @@ importers:
       '@shadow-banking/core':
         specifier: workspace:*
         version: link:../core
+      '@shadow-banking/execution':
+        specifier: workspace:*
+        version: link:../execution
       '@shadow-banking/risk':
         specifier: workspace:*
         version: link:../risk
@@ -101,6 +104,15 @@ importers:
       zod:
         specifier: ^3.25.76
         version: 3.25.76
+
+  packages/execution:
+    dependencies:
+      '@shadow-banking/core':
+        specifier: workspace:*
+        version: link:../core
+      '@shadow-banking/risk':
+        specifier: workspace:*
+        version: link:../risk
 
   packages/opportunity:
     dependencies:

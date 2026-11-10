@@ -7,7 +7,8 @@ export type CommandName =
   | 'accounting'
   | 'risk'
   | 'status'
-  | 'paper';
+  | 'paper'
+  | 'execution';
 
 export const COMMANDS: readonly CommandName[] = [
   'help',
@@ -19,6 +20,7 @@ export const COMMANDS: readonly CommandName[] = [
   'risk',
   'status',
   'paper',
+  'execution',
 ];
 
 const ALIASES: Record<string, CommandName> = {
@@ -38,6 +40,8 @@ const ALIASES: Record<string, CommandName> = {
   status: 'status',
   paper: 'paper',
   controller: 'paper',
+  execution: 'execution',
+  exec: 'execution',
 };
 
 export interface ParsedArgs {
@@ -137,14 +141,16 @@ Commands:
   accounting       Accounting ledger (@shadow-banking/accounting)
   risk             Risk governor (@shadow-banking/risk): state / evaluate / veto
   paper            Phase 4 paper controller loop (@shadow-banking/controller)
+  execution        Phase 5 assisted execution: propose / show / approve / reject (no broadcast)
 
 Global:
   --json           Machine-readable JSON on stdout (default is a text table)
   --format json|table
   --help           This message
 
-Paper / read-only (Phases 1–4):
+Paper (Phases 1–4) and assisted execution (Phase 5):
   This CLI never signs, never holds keys, and never submits transactions.
+  Phase 5: propose + approve only. Broadcast is forbidden.
   Exit 0 = ok. Exit 2 = risk-governor veto. Exit 1 = usage or runtime error.
   If recommendedAction is hold_liquid / noDeployment is true: do not deploy.
 `;

@@ -87,6 +87,17 @@ jobs:
           pnpm paper run --steps 3 --seed 1000 --provider fixture --state-dir /tmp/paper-run --json > /tmp/paper-run.json
           pnpm sb paper run --steps 2 --seed 1000 --json --state-dir /tmp/sb-paper-run > /tmp/sb-paper.json
 
+      - name: Assisted execution smoke run (mock, no network)
+        run: |
+          pnpm execution help --json > /tmp/execution-help.json
+          pnpm execution propose --preset hold-liquid --dir /tmp/exec-run --json > /tmp/exec-hold.json
+          set +e
+          pnpm execution broadcast --id missing --json > /tmp/exec-broadcast.json
+          code=$?
+          set -e
+          test "$code" -eq 1
+          pnpm sb execution propose --preset hold-liquid --dir /tmp/sb-exec --json > /tmp/sb-exec.json
+
       - name: Agent CLI smoke run (no network)
         run: |
           pnpm sb --help
@@ -95,3 +106,4 @@ jobs:
           pnpm sb strategy --json > /tmp/sb-strategy.json
           pnpm sb accounting --json > /tmp/sb-accounting.json
           pnpm sb paper --help --json > /tmp/sb-paper-help.json
+          pnpm sb execution help --json > /tmp/sb-execution-help.json
