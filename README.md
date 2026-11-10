@@ -26,7 +26,7 @@ pnpm sb status --json
 pnpm sb sim --json --preset aave-v3-ethereum-wsteth-eth-emode --seed 1000
 pnpm sim run --preset aave-v3-ethereum-wsteth-eth-emode --seed 1000
 pnpm sim compare --seed 1000
-pnpm strategy compare --snapshot docs/data/market-snapshot-2026-10-21.json --seed 1000
+pnpm strategy stack --snapshot docs/data/market-snapshot-2026-10-21.json --seed 1000 --json
 pnpm strategy compare --snapshot docs/data/market-snapshot-2026-10-21.json --seed 1000 --json
 pnpm opportunity refresh --provider fixture --json
 pnpm opportunity show --json
@@ -45,7 +45,7 @@ Read [`AGENTS.md`](AGENTS.md) (and [`.claude/CLAUDE.md`](.claude/CLAUDE.md)) bef
 - [`packages/cli`](packages/cli/) — LLM-compatible paper/read-only shell (`status`, `balance-sheet`, `disclosures`, `sim`, `strategy`, `accounting`, `risk`, `paper`, `execution`).
 - [`packages/core`](packages/core/) — consolidated balance-sheet model (disclosures, T0–T3 liquidity tiers, NAV, health factor, deployable capital).
 - [`simulator/`](simulator/) — recursive collateralized-borrowing simulator. All printed APYs are **estimates** from a dated snapshot, not realized returns. Default hurdle: 10% annualized net, configurable.
-- [`packages/strategy`](packages/strategy/) — stack economics: compose simultaneous legs on the same equity; single-strategy compare (hold LST, loop, hedged carry, LP, preserve-liquid) is a diagnostic. CLI tables plus `--json`. Default hurdle: 10% annualized net, configurable, not a promise.
+- [`packages/strategy`](packages/strategy/) — stack composer: concurrent legs on the same equity; single-strategy compare (hold LST, loop, hedged carry, LP, preserve-liquid) is a diagnostic. CLI tables plus `--json`. Default hurdle: 10% annualized net, configurable, not a promise. Hold liquid = reserve-only stack.
 - [`packages/opportunity`](packages/opportunity/) — market-snapshot refresh (fixture + live Aave/LST/Hyperliquid). Read-only. `pnpm opportunity refresh` / `show`.
 - [`packages/accounting`](packages/accounting/) — double-entry ledger and consolidated performance report (CLI). Borrowed principal is not income; annualized yield is labeled an estimate.
 - [`packages/risk`](packages/risk/) — risk governor runtime (states, hysteresis, hard-limit veto). `pnpm risk state` / `pnpm risk evaluate`; also used by `pnpm sb risk` and `pnpm sb status`.

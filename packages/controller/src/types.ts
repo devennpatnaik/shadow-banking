@@ -1,6 +1,12 @@
 import type { Ledger } from '@shadow-banking/accounting';
 import type { Decimal } from '@shadow-banking/core';
-import type { ComparisonResult, FundingBasis, StrategyId } from '@shadow-banking/strategy';
+import type {
+  CapitalStack,
+  ComparisonResult,
+  FundingBasis,
+  LegKind,
+  StrategyId,
+} from '@shadow-banking/strategy';
 import type {
   ActionIntent,
   EvaluationResult,
@@ -35,7 +41,9 @@ export interface PaperStepRecord {
   at: string;
   snapshotDate: string;
   posture: PaperPosture;
-  strategyId: StrategyId;
+  strategyId: StrategyId | 'stack';
+  legs: LegKind[];
+  nextLeg: LegKind | null;
   recommendedAction: RecommendedAction;
   noDeployment: boolean;
   clearsHurdle: boolean;
@@ -69,6 +77,7 @@ export interface PaperRunResult {
   drawdown: Decimal;
   ledger: Ledger;
   lastComparison: ComparisonResult | null;
+  lastStack: CapitalStack | null;
   lastEvaluation: EvaluationResult | null;
   riskMemory: RiskMemory;
   stateDir: string;

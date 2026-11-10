@@ -10,13 +10,18 @@ import {
   type Proposal,
   type RiskMemory,
 } from '@shadow-banking/risk';
-import { loadSnapshot, type ComparisonResult } from '@shadow-banking/strategy';
+import {
+  inferActiveLegsFromLedger,
+  loadSnapshot,
+  type CapitalStack,
+  type ComparisonResult,
+} from '@shadow-banking/strategy';
 import { accruePaperDay, applyApprovedPaperActions, hasDeployedPositions } from './apply.js';
 import { addUtcDays, dateToIso } from './clock.js';
-import { evaluatePaperStrategies } from './evaluate-strategies.js';
+import { composePaperStack, evaluatePaperStrategies } from './evaluate-strategies.js';
 import { defaultStateDir, defaultSnapshotPath, resolveSnapshotPath } from './paths.js';
 import { persistPaperRun } from './persist.js';
-import { proposeFromComparison } from './propose.js';
+import { proposeFromStack } from './propose.js';
 import { seedIdlePaperLedger } from './seed.js';
 import type { PaperLoopInput, PaperRunConfig, PaperRunResult, PaperStepRecord } from './types.js';
 
@@ -29,7 +34,10 @@ function headlineOf(args: {
   debt: Decimal;
   veto: boolean;
 }): string {
-  const posture = args.posture === 'hold_liquid' ? 'HOLD LIQUID' : `DEPLOYED (${args.strategyId})`;
+  const posture =
+    args.posture === 'hold_liquid'
+      ? 'HOLD LIQUID (reserve-only stack)'
+      : `STACK (${args.strategyId})`;
   const veto = args.veto ? 'VETO' : 'no veto';
   return `Paper · ${formatMoney(args.seedUsd)} · ${args.steps} steps · ${posture} · NAV ${formatMoney(args.nav)} · debt ${formatMoney(args.debt)} · ${veto}`;
 }
@@ -71,6 +79,7 @@ export function runPaper(input: PaperLoopInput): PaperRunResult {
   const disclosure = paperDisclosure();
   const steps: PaperStepRecord[] = [];
   let lastComparison: ComparisonResult | null = null;
+  let lastStack: CapitalStack | null = null;
   let lastEvaluation: EvaluationResult | null = null;
   let prevNav = ledger.nav();
 
@@ -90,7 +99,7 @@ export function runPaper(input: PaperLoopInput): PaperRunResult {
       });
     }
 
-    const comparison = evaluatePaperStrategies({
+    const evalArgs = {
       snapshot,
       seedUsd,
       hurdleApy: hurdle,
@@ -101,11 +110,12 @@ export function runPaper(input: PaperLoopInput): PaperRunResult {
       reserveRate,
       disclosure,
       ledger,
-    });
+    };
+    const comparison = evaluatePaperStrategies(evalArgs);
+    const stack = composePaperStack(evalArgs);
     lastComparison = comparison;
-    const noDeployment =
-      comparison.recommendation.action === 'preserve-capital' ||
-      !comparison.recommendation.clearsHurdle;
+    lastStack = stack;
+    const noDeployment = stack.noDeployment;
     const perf = buildPerformanceReport(ledger, hurdle);
     const dailyPnl = ledger.nav().minus(prevNav);
     const book = ledger.toBalanceSheet(at);
@@ -114,11 +124,11 @@ export function runPaper(input: PaperLoopInput): PaperRunResult {
       drawdown: perf.maxDrawdown.abs(),
       dailyPnl,
     });
-    let proposal: Proposal = proposeFromComparison({
-      comparison,
+    let proposal: Proposal = proposeFromStack({
+      stack,
+      active: inferActiveLegsFromLedger(ledger),
       riskState: memory.state,
       step: i,
-      alreadyDeployed: hasDeployedPositions(ledger),
     });
     if (input.mutateProposal) proposal = input.mutateProposal(proposal, { step: i });
 
@@ -137,7 +147,6 @@ export function runPaper(input: PaperLoopInput): PaperRunResult {
       ledger,
       proposal,
       evaluation,
-      comparison,
       lstPrice: d(snapshot.assets.find((a) => a.symbol === 'wstETH')?.priceUsd ?? 0),
       borrowApr: d(
         snapshot.markets.find((m) => m.asset === 'WETH' && m.network === config.network)
@@ -155,10 +164,12 @@ export function runPaper(input: PaperLoopInput): PaperRunResult {
       at,
       snapshotDate: snapshot.snapshotDate,
       posture,
-      strategyId: comparison.recommendation.strategyId,
+      strategyId: 'stack',
+      legs: stack.legs.map((l) => l.kind),
+      nextLeg: stack.nextProposedLeg?.kind ?? null,
       recommendedAction: evaluation.recommendedAction,
       noDeployment: evaluation.noDeployment || noDeployment,
-      clearsHurdle: comparison.recommendation.clearsHurdle,
+      clearsHurdle: stack.clearsHurdle,
       riskState: evaluation.state,
       veto: evaluation.veto,
       executed: apply.applied,
@@ -175,6 +186,7 @@ export function runPaper(input: PaperLoopInput): PaperRunResult {
       costs: ledger.expenseTotal(),
       drawdown: after.maxDrawdown,
       reasons: [
+        stack.stopReason,
         ...comparison.recommendation.reasons,
         ...apply.memos,
         ...(evaluation.veto ? ['Risk governor veto: hypothetical execution skipped.'] : []),
@@ -192,7 +204,7 @@ export function runPaper(input: PaperLoopInput): PaperRunResult {
     seedUsd,
     steps: config.steps,
     posture,
-    strategyId: last?.strategyId ?? 'preserve-liquid',
+    strategyId: last?.strategyId ?? 'stack',
     nav: ledger.nav(),
     debt: ledger.totalDebt(),
     veto,
@@ -229,6 +241,7 @@ export function runPaper(input: PaperLoopInput): PaperRunResult {
     drawdown: last?.drawdown ?? d(0),
     ledger,
     lastComparison,
+    lastStack,
     lastEvaluation,
     riskMemory: memory,
     stateDir,

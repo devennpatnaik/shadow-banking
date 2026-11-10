@@ -1,7 +1,7 @@
 import { reportToJson } from '@shadow-banking/accounting';
 import { buildPerformanceReport } from '@shadow-banking/accounting';
 import { toJsonNumber } from '@shadow-banking/core';
-import { comparisonToJson } from '@shadow-banking/strategy';
+import { comparisonToJson, stackToJson } from '@shadow-banking/strategy';
 import { evaluationToJson } from '@shadow-banking/risk';
 import { PAPER_ENVELOPE } from './envelope.js';
 import type { PaperRunResult, PaperStepRecord } from './types.js';
@@ -13,6 +13,8 @@ function stepJson(s: PaperStepRecord): Record<string, unknown> {
     snapshotDate: s.snapshotDate,
     posture: s.posture,
     strategyId: s.strategyId,
+    legs: s.legs,
+    nextLeg: s.nextLeg,
     recommendedAction: s.recommendedAction,
     noDeployment: s.noDeployment,
     clearsHurdle: s.clearsHurdle,
@@ -61,6 +63,7 @@ export function paperRunToJson(result: PaperRunResult): Record<string, unknown> 
     },
     performance: reportToJson(perf),
     comparison: result.lastComparison ? comparisonToJson(result.lastComparison) : null,
+    stack: result.lastStack ? stackToJson(result.lastStack) : null,
     governor: result.lastEvaluation ? evaluationToJson(result.lastEvaluation, 'paper') : null,
     assistedExecution: {
       status: 'propose_approve_only',

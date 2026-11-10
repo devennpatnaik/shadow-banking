@@ -3,9 +3,10 @@ import { resolve } from 'node:path';
 import { d, parseDisclosureProfile } from '@shadow-banking/core';
 import { resolveCapital } from './capital.js';
 import { compareStrategies } from './compare.js';
+import { composeStack } from './compose.js';
 import { loadSnapshot, resolveMarket } from './market.js';
-import { formatComparison } from './report.js';
-import { comparisonToJson } from './serialize.js';
+import { formatComparison, formatStack } from './report.js';
+import { comparisonToJson, stackToJson } from './serialize.js';
 import type { ComparisonInput, FundingBasis } from './types.js';
 
 function arg(args: string[], name: string): string | undefined {
@@ -25,17 +26,18 @@ function defaultSnapshotPath(): string | null {
 
 function usage(): string {
   return `Usage:
+  pnpm strategy stack --snapshot docs/data/market-snapshot-2026-10-21.json --seed 1000
+  pnpm strategy stack --snapshot <file> --seed 1000 --json --hurdle 0.10
   pnpm strategy compare --snapshot docs/data/market-snapshot-2026-10-21.json --seed 1000
   pnpm strategy compare --snapshot <file> --seed 1000 --json
   pnpm strategy compare --snapshot <file> --seed 1000 --hurdle 0.10 --reserve 0.20 --horizon 365
   pnpm strategy compare --snapshot <file> --seed 1000 --funding 30d|planning|current|stress
   pnpm strategy compare --snapshot <file> --seed 1000 --disclosure <profile.json>
 
-Evaluates hold-LST, 2x/3x recursive loops, hedged carry, optional LP, and preserve-liquid.
+stack: compose concurrent legs on the same equity (reserve, productive, collateral, borrow, redeploy, optional hedge).
+compare: diagnostic single-strategy table (not the product identity).
 Expected net = recurring income − financing − execution − expected losses.
-Gross, estimated net, and realized-capable fields are printed separately.
-All printed APYs are estimates from a dated snapshot, not realized returns.
-Default hurdle: 10% annualized net (configurable, not a promise).
+Hold liquid = reserve-only stack. Default hurdle: 10% annualized net (configurable, not a promise).
 `;
 }
 
@@ -86,6 +88,14 @@ function main(argv: string[]): number {
   const [, , cmd, ...args] = argv;
   if (!cmd || cmd === 'help' || cmd === '--help') {
     process.stdout.write(usage());
+    return 0;
+  }
+  if (cmd === 'stack' || cmd === 'compose') {
+    const stack = composeStack(loadInput(args));
+    const json = flag(args, '--json') || arg(args, '--format') === 'json';
+    process.stdout.write(
+      json ? `${JSON.stringify(stackToJson(stack), null, 2)}\n` : `${formatStack(stack)}\n`,
+    );
     return 0;
   }
   if (cmd === 'compare') {

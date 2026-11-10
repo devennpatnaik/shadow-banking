@@ -14,6 +14,7 @@ import {
   BroadcastRefused,
   presetProposal,
   isExecutionPreset,
+  stackStepProposal,
   defaultStateDir,
   writeProposal,
   writeProposalJson,
@@ -26,7 +27,7 @@ import { flagOn, flagValue, type ParsedArgs } from './parse.js';
 
 function executionUsage(): string {
   return `Usage:
-  pnpm sb execution propose [--preset hold-liquid|loop-step] [--net 0.12] [--json]
+  pnpm sb execution propose [--preset hold-liquid|loop-step|stack-step] [--net 0.12] [--json]
   pnpm sb execution show --id <id> [--json]
   pnpm sb execution approve --id <id> [--json]
   pnpm sb execution reject --id <id> [--json]
@@ -66,11 +67,26 @@ export function cmdExecution(io: Io, args: ParsedArgs): number {
       const net = flagValue(restFlags, '--net');
       const proposal = intentsPath
         ? hydrateProposal(readJsonFile(intentsPath))
-        : isExecutionPreset(presetRaw)
-          ? presetProposal(presetRaw, net)
-          : (() => {
-              throw new Error(`unknown --preset ${presetRaw}`);
-            })();
+        : presetRaw === 'stack-step'
+          ? stackStepProposal(
+              (() => {
+                const snapshotPath = flagValue(restFlags, '--snapshot');
+                const seed = flagValue(restFlags, '--seed');
+                const hurdleArg = flagValue(restFlags, '--hurdle');
+                const reserve = flagValue(restFlags, '--reserve');
+                return {
+                  ...(snapshotPath ? { snapshotPath } : {}),
+                  ...(seed ? { seed } : {}),
+                  ...(hurdleArg ? { hurdle: hurdleArg } : {}),
+                  ...(reserve ? { reserve } : {}),
+                };
+              })(),
+            )
+          : isExecutionPreset(presetRaw)
+            ? presetProposal(presetRaw, net)
+            : (() => {
+                throw new Error(`unknown --preset ${presetRaw}`);
+              })();
       const hurdle = flagValue(restFlags, '--hurdle');
       const fixtureRaw = flagValue(restFlags, '--fixture');
       const built = proposeExecution({

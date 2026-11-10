@@ -1,12 +1,19 @@
 import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { d } from '@shadow-banking/core';
 import { EXIT_OK, EXIT_VETO, runPaperCli } from '../src/run.js';
 import { runPaper } from '../src/loop.js';
+import { hasDeployedPositions } from '../src/apply.js';
 import { loadPersistedRun } from '../src/persist.js';
 import { resolveSnapshotPath } from '../src/paths.js';
+
+const highCarry = join(
+  dirname(fileURLToPath(import.meta.url)),
+  '../../strategy/test/fixtures/high-carry-snapshot.json',
+);
 
 function tmpDir(): string {
   return mkdtempSync(join(tmpdir(), 'sb-paper-test-'));
@@ -60,6 +67,25 @@ describe('paper portfolio loop', () => {
     expect(result.nav.toFixed(2)).toBe('1000.00');
     expect(result.steps[0]?.executed).toBe(false);
     expect(result.ledger.getBorrows()).toHaveLength(0);
+  });
+
+  it('extends a multi-leg stack on the high-carry fixture', () => {
+    const stateDir = tmpDir();
+    const result = runPaper({
+      steps: 5,
+      seedUsd: d(1000),
+      snapshotPath: highCarry,
+      stateDir,
+      reserveRate: d('0.20'),
+    });
+    expect(result.veto).toBe(false);
+    expect(result.lastStack).toBeTruthy();
+    expect(result.lastStack!.legs.length).toBeGreaterThanOrEqual(3);
+    const kinds = result.lastStack!.legs.map((l) => l.kind);
+    expect(kinds).toContain('productive_asset');
+    expect(kinds).toContain('collateral_post');
+    expect(result.steps.some((s) => s.executed)).toBe(true);
+    expect(hasDeployedPositions(result.ledger)).toBe(true);
   });
 });
 

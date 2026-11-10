@@ -18,6 +18,8 @@ pnpm sb disclosures --json
 pnpm sb sim --json --preset aave-v3-ethereum-wsteth-eth-emode --seed 1000
 pnpm sb risk --json
 pnpm sb strategy --json
+pnpm sb stack --json
+pnpm strategy stack --json --seed 1000
 pnpm sb accounting --json
 pnpm opportunity show --json
 pnpm opportunity refresh --provider fixture --json
@@ -30,7 +32,7 @@ pnpm execution show --id <id> --json
 pnpm sb execution propose --preset hold-liquid --json
 ```
 
-`pnpm sb` is the paper-book entrypoint (`packages/cli`). It wraps `@shadow-banking/core`, `@shadow-banking/simulator`, `@shadow-banking/strategy`, `@shadow-banking/accounting`, `@shadow-banking/risk`, and `@shadow-banking/controller`. Market snapshots are refreshed with `pnpm opportunity` (`@shadow-banking/opportunity`) in fixture or live mode; CI uses `--provider fixture` (no network). Phase 4 paper loop: `pnpm paper run --steps N --seed 1000` (or `pnpm sb paper`). If `noDeployment` is true, the productive stack is empty — **do not invent legs or a deployment**.
+`pnpm sb` is the paper-book entrypoint (`packages/cli`). It wraps `@shadow-banking/core`, `@shadow-banking/simulator`, `@shadow-banking/strategy`, `@shadow-banking/accounting`, `@shadow-banking/risk`, and `@shadow-banking/controller`. Market snapshots are refreshed with `pnpm opportunity` (`@shadow-banking/opportunity`) in fixture or live mode; CI uses `--provider fixture` (no network). Phase 4 paper loop: `pnpm paper run --steps N --seed 1000` (or `pnpm sb paper`). The product is a **concurrent capital stack** (`pnpm sb stack` / `pnpm strategy stack`), not a single-strategy picker. If `noDeployment` is true, the productive stack is empty (reserve-only) — **do not invent legs or a deployment**.
 
 Dedicated governor CLI: `pnpm risk state` / `pnpm risk evaluate` (same veto semantics). Paper controller: `pnpm paper run` / `pnpm paper show`. Assisted execution: `pnpm execution propose|show|approve|reject` (Phase 5; broadcast refused).
 

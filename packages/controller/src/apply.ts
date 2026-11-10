@@ -1,14 +1,7 @@
 import type { Ledger } from '@shadow-banking/accounting';
-import { d, type Decimal } from '@shadow-banking/core';
-import type { ComparisonResult, StrategyEvaluation } from '@shadow-banking/strategy';
+import { Decimal, d, min } from '@shadow-banking/core';
 import type { EvaluationResult, Proposal } from '@shadow-banking/risk';
 import { workingCashId } from './seed.js';
-
-function chosen(result: ComparisonResult): StrategyEvaluation {
-  const found = result.evaluations.find((e) => e.id === result.recommendation.strategyId);
-  if (!found) throw new Error('strategy evaluation missing');
-  return found;
-}
 
 function approvedIds(evaluation: EvaluationResult): Set<string> {
   return new Set(
@@ -34,16 +27,21 @@ export function hasDeployedPositions(ledger: Ledger): boolean {
   );
 }
 
+function findWst(ledger: Ledger, role?: string) {
+  return ledger.findHolding(
+    (h) =>
+      h.instrumentId === 'wstETH' && h.quantity.gt(0) && (role === undefined || h.role === role),
+  );
+}
+
 /**
- * Apply only governor-approved intents to the paper ledger. Rejected / vetoed
- * intents are never posted. No signing, no broadcast.
+ * Apply only governor-approved intents, one stack leg at a time. No signing, no broadcast.
  */
 export function applyApprovedPaperActions(args: {
   at: string;
   ledger: Ledger;
   proposal: Proposal;
   evaluation: EvaluationResult;
-  comparison: ComparisonResult;
   lstPrice: Decimal;
   borrowApr: Decimal;
 }): { applied: boolean; memos: string[] } {
@@ -53,81 +51,104 @@ export function applyApprovedPaperActions(args: {
     return { applied: false, memos };
   }
   const ok = approvedIds(args.evaluation);
-  const deployIntents = args.proposal.intents.filter(
-    (i) =>
-      ok.has(i.id) &&
-      (i.kind === 'stake' || i.kind === 'borrow' || i.kind === 'open_hedge' || i.kind === 'swap'),
-  );
-  const riskOn = deployIntents.some(
-    (i) => i.riskIncreasing || i.kind === 'borrow' || i.kind === 'stake',
-  );
-  if (!riskOn) {
-    memos.push('Hold liquid: no deployment posted to the ledger.');
-    applyMandatedRepay(args);
-    return { applied: false, memos };
-  }
-  if (hasDeployedPositions(args.ledger)) {
-    memos.push('Already deployed; paper loop does not add leverage automatically.');
+  const approved = args.proposal.intents.filter((i) => ok.has(i.id));
+  if (approved.length === 0) {
+    memos.push('No approved intents.');
     return { applied: false, memos };
   }
 
-  const pick = chosen(args.comparison);
+  const kinds = new Set(approved.map((i) => i.kind));
+  if (
+    [...kinds].every((k) => k === 'hold' || k === 'repay' || k === 'unwind') &&
+    !kinds.has('stake') &&
+    !kinds.has('borrow') &&
+    !kinds.has('add_collateral') &&
+    !kinds.has('open_hedge')
+  ) {
+    memos.push('Hold liquid / mandated reduce: no new stack leg posted.');
+    applyMandatedRepay(args);
+    return { applied: false, memos };
+  }
+
   const cashId = workingCashId(args.ledger);
   const cash = args.ledger.findHolding((h) => h.id === cashId);
   if (!cash) {
     memos.push('No working cash; holding liquid.');
     return { applied: false, memos };
   }
-  const fee = pick.oneOffCostsUsd.div(2);
-  const budget = fee.gt(0) ? cash.quantity.minus(fee) : cash.quantity;
-  const want = pick.equityUsd.gt(0) ? pick.equityUsd : pick.deployedUsd;
-  const spend = want.lt(budget) ? want : budget;
-  const qty = args.lstPrice.gt(0) ? spend.div(args.lstPrice) : d(0);
-  if (qty.lte(0) || spend.lte(0) || budget.lte(0)) {
-    memos.push('Nothing to acquire; holding liquid.');
-    return { applied: false, memos };
-  }
 
-  const acquired = args.ledger.acquire({
-    at: args.at,
-    instrumentId: 'wstETH',
-    quantity: qty,
-    price: args.lstPrice,
-    cashHoldingId: cashId,
-    venueAccountId: 'aave',
-    role: 'productive',
-    ...(fee.gt(0) ? { fee, feeHoldingId: cashId } : {}),
-    source: 'paper-controller',
-  });
-  memos.push(`Paper acquire ${qty.toFixed(6)} wstETH (hypothetical).`);
-
-  const wantsLoop = args.proposal.intents.some((i) => i.kind === 'borrow' && ok.has(i.id));
-  if (wantsLoop) {
+  if (kinds.has('add_collateral')) {
+    const h = findWst(args.ledger, 'productive') ?? findWst(args.ledger);
+    if (!h || h.role === 'collateral') {
+      memos.push('Nothing to pledge.');
+      return { applied: false, memos };
+    }
     args.ledger.pledge({
       at: args.at,
-      holdingId: acquired.holdingId,
+      holdingId: h.id,
       collateralPositionId: 'paper-aave-wsteth',
     });
-    const borrowIntent = args.proposal.intents.find((i) => i.kind === 'borrow');
-    const debt = borrowIntent
-      ? modifiedNotional(args.evaluation, borrowIntent.id, pick.debtUsd)
-      : pick.debtUsd;
-    if (debt.gt(0)) {
-      args.ledger.borrow({
-        at: args.at,
-        amount: debt,
-        instrumentId: 'USDC',
-        venueAccountId: 'aave',
-        cashVenueAccountId: 'wallet',
-        apr: args.borrowApr,
-        venue: 'Aave v3 paper',
-        intentHash: `paper-borrow-${args.proposal.id}`,
-      });
-      memos.push(`Paper borrow ${debt.toFixed(2)} USDC (principal is not income).`);
-    }
+    memos.push('Paper pledged wstETH as collateral (same asset; equity not double-counted).');
+    return { applied: true, memos };
   }
 
-  return { applied: true, memos };
+  if (kinds.has('borrow')) {
+    const borrowIntent = approved.find((i) => i.kind === 'borrow');
+    const debt = borrowIntent
+      ? modifiedNotional(args.evaluation, borrowIntent.id, borrowIntent.notionalUsd)
+      : d(0);
+    if (debt.lte(0)) {
+      memos.push('Zero borrow size.');
+      return { applied: false, memos };
+    }
+    args.ledger.borrow({
+      at: args.at,
+      amount: debt,
+      instrumentId: 'USDC',
+      venueAccountId: 'aave',
+      cashVenueAccountId: 'wallet',
+      apr: args.borrowApr,
+      venue: 'Aave v3 paper',
+      intentHash: `paper-borrow-${args.proposal.id}`,
+    });
+    memos.push(`Paper borrow ${debt.toFixed(2)} USDC (principal is not income).`);
+    return { applied: true, memos };
+  }
+
+  if (kinds.has('open_hedge')) {
+    memos.push('Paper hedge is recorded as a stack leg only (no live Hyperliquid order).');
+    return { applied: true, memos };
+  }
+
+  if (kinds.has('stake') || kinds.has('swap')) {
+    const stake =
+      approved.find((i) => i.kind === 'stake') ?? approved.find((i) => i.kind === 'swap');
+    const want = stake ? modifiedNotional(args.evaluation, stake.id, stake.notionalUsd) : d(0);
+    const budget = cash.quantity;
+    const spend = want.gt(0) ? min(want, budget) : budget;
+    const qty = args.lstPrice.gt(0)
+      ? min(spend, cash.quantity).div(args.lstPrice).toDecimalPlaces(8, Decimal.ROUND_DOWN)
+      : d(0);
+    if (qty.lte(0) || spend.lte(0)) {
+      memos.push('Nothing to acquire; holding liquid.');
+      return { applied: false, memos };
+    }
+    args.ledger.acquire({
+      at: args.at,
+      instrumentId: 'wstETH',
+      quantity: qty,
+      price: args.lstPrice,
+      cashHoldingId: cashId,
+      venueAccountId: 'aave',
+      role: 'productive',
+      source: 'paper-controller',
+    });
+    memos.push(`Paper acquire ${qty.toFixed(6)} wstETH (hypothetical stack leg).`);
+    return { applied: true, memos };
+  }
+
+  memos.push('No mapped stack-leg intent.');
+  return { applied: false, memos };
 }
 
 function applyMandatedRepay(args: {

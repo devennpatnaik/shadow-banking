@@ -1,5 +1,6 @@
 import { formatMoney, formatPct, formatRatio } from '@shadow-banking/core';
 import type { ComparisonResult, StrategyEvaluation } from './types.js';
+import type { CapitalStack } from './stack-types.js';
 
 function pad(s: string, n: number): string {
   return s.length >= n ? s.slice(0, n) : `${s}${' '.repeat(n - s.length)}`;
@@ -40,7 +41,7 @@ export function formatComparison(result: ComparisonResult): string {
     widths,
   );
   const lines = [
-    `Strategy comparison  ·  snapshot ${result.snapshotDate}  ·  seed ${formatMoney(result.capital.seedUsd)}  ·  deployable ${formatMoney(result.capital.deployableUsd)}  ·  reserve ${formatPct(result.capital.reserveRate)}  ·  hurdle ${formatPct(result.hurdleApy)}  ·  ALL FIGURES ARE ESTIMATES`,
+    `Strategy comparison (diagnostic; product is the multi-use stack)  ·  snapshot ${result.snapshotDate}  ·  seed ${formatMoney(result.capital.seedUsd)}  ·  deployable ${formatMoney(result.capital.deployableUsd)}  ·  reserve ${formatPct(result.capital.reserveRate)}  ·  hurdle ${formatPct(result.hurdleApy)}  ·  ALL FIGURES ARE ESTIMATES`,
     `Horizon ${result.horizonDays}d. Expected net = recurring income − financing − execution − expected losses. Realized yield is not available without the accounting ledger.`,
     '',
     header,
@@ -89,5 +90,46 @@ export function formatComparison(result: ComparisonResult): string {
     `  · capital: liquid reserve ${formatMoney(result.capital.reserveUsd)} / investable ${formatMoney(result.capital.investableUsd)} / household requirement ${formatMoney(result.capital.householdRequirementUsd)}`,
   );
   for (const w of result.warnings) lines.push(`  · ${w}`);
+  return lines.join('\n');
+}
+
+export function formatStack(stack: CapitalStack): string {
+  const widths = [4, 20, 10, 10, 10, 10, 8, 8];
+  const header = row(['#', 'leg', 'income', 'fin+exec', 'net', 'marginal', 'HF', 'lev'], widths);
+  const lines = [
+    `Capital stack  ·  snapshot ${stack.snapshotDate}  ·  seed ${formatMoney(stack.seedUsd)}  ·  owner equity ${formatMoney(stack.ownerEquityUsd)}  ·  borrowed ${formatMoney(stack.borrowedCapitalUsd)}  ·  hurdle ${formatPct(stack.hurdleApy)}  ·  ESTIMATES`,
+    `Concurrent uses of the same equity. Hold liquid = reserve-only stack. NAV ${formatMoney(stack.navUsd)}  debt ${formatMoney(stack.debtUsd)}  HF ${stack.healthFactor ? stack.healthFactor.toFixed(2) : 'n/a'}.`,
+    '',
+    header,
+    '-'.repeat(header.length),
+  ];
+  for (const leg of stack.legs) {
+    lines.push(
+      row(
+        [
+          String(leg.order),
+          leg.kind,
+          formatMoney(leg.incomeUsd),
+          formatMoney(leg.financingUsd.plus(leg.executionUsd)),
+          formatMoney(leg.estimatedNetUsd),
+          formatPct(leg.marginalNetApy),
+          leg.healthFactor ? leg.healthFactor.toFixed(2) : 'n/a',
+          formatRatio(leg.leverage),
+        ],
+        widths,
+      ),
+    );
+  }
+  lines.push(
+    '',
+    `consolidated net ${formatMoney(stack.consolidated.estimatedNetUsd)}/yr  (${formatPct(stack.consolidatedNetApy)})  clearsHurdle=${stack.clearsHurdle}`,
+    `  income ${formatMoney(stack.consolidated.grossIncomeUsd)} − fin ${formatMoney(stack.consolidated.financingUsd)} − exec ${formatMoney(stack.consolidated.executionUsd)} − E[loss] ${formatMoney(stack.consolidated.expectedLossUsd)}`,
+    `action: ${stack.recommendedAction}  noDeployment=${stack.noDeployment}`,
+    `stop: ${stack.stopReason}`,
+  );
+  if (stack.nextProposedLeg) {
+    lines.push(`next leg: ${stack.nextProposedLeg.kind} — ${stack.nextProposedLeg.reason}`);
+  }
+  for (const w of stack.warnings) lines.push(`  · ${w}`);
   return lines.join('\n');
 }
