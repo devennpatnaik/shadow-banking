@@ -113,6 +113,9 @@ importers:
       '@shadow-banking/risk':
         specifier: workspace:*
         version: link:../risk
+      '@shadow-banking/strategy':
+        specifier: workspace:*
+        version: link:../strategy
 
   packages/opportunity:
     dependencies:

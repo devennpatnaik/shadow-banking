@@ -51,6 +51,10 @@ describe('JSON shapes', () => {
     expect(json['noDeployment']).toBe(true);
     expect(json['recommendedAction']).toBe('hold_liquid');
     expect(json['riskState']).toBe('Normal');
+    expect(json['stack']).toBeTruthy();
+    const stack = json['stack'] as { legs: { kind: string }[]; noDeployment: boolean };
+    expect(stack.noDeployment).toBe(true);
+    expect(stack.legs[0]?.kind).toBe('liquidity_reserve');
     expect(json['assistedExecution']).toMatchObject({
       status: 'propose_approve_only',
       phase: 5,
@@ -99,6 +103,16 @@ describe('JSON shapes', () => {
     expect(rec).toHaveProperty('clearsHurdle');
     expect(rec).toHaveProperty('action');
     expect(rec).toHaveProperty('hurdleApy');
+  });
+
+  it('stack --json is a reserve-only stack at $1k / 10%', () => {
+    const r = capture(['stack', '--json', '--seed', '1000']);
+    expect(r.code).toBe(EXIT_OK);
+    const json = parseStdoutJson(r.stdout);
+    expectEnvelope(json, 'stack');
+    expect(json['noDeployment']).toBe(true);
+    const result = json['result'] as { legs: { kind: string }[] };
+    expect(result.legs[0]?.kind).toBe('liquidity_reserve');
   });
 
   it('strategy and accounting wrap the real packages', () => {

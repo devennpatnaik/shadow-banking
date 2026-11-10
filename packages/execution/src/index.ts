@@ -12,6 +12,7 @@ export {
 export { accountingImpact } from './impact.js';
 export { checkPolicy, defaultPolicy } from './policy.js';
 export { PRESET_IDS, isExecutionPreset, presetProposal } from './presets.js';
+export { stackStepProposal } from './stack-preset.js';
 export { proposeExecution } from './propose.js';
 export { formatProposal, formatStored } from './report.js';
 export { runExecutionCli, USAGE as EXECUTION_USAGE } from './run.js';

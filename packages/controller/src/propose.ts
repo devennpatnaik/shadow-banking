@@ -1,109 +1,79 @@
 import { ZERO, type Decimal } from '@shadow-banking/core';
-import type { ComparisonResult, StrategyEvaluation } from '@shadow-banking/strategy';
+import {
+  nextStackStepProposal,
+  type CapitalStack,
+  type LegKind,
+  type StackStepIntent,
+} from '@shadow-banking/strategy';
 import type { ActionIntent, Proposal, RiskState } from '@shadow-banking/risk';
 
-function pick(result: ComparisonResult): StrategyEvaluation {
-  const id = result.recommendation.strategyId;
-  const found = result.evaluations.find((e) => e.id === id);
-  if (!found) throw new Error(`missing evaluation ${id}`);
-  return found;
+function toIntent(row: StackStepIntent): ActionIntent {
+  const intent: ActionIntent = {
+    id: row.id,
+    kind: row.kind,
+    notionalUsd: row.notionalUsd,
+    riskIncreasing: row.riskIncreasing,
+  };
+  if (row.expectedNetReturn !== undefined) intent.expectedNetReturn = row.expectedNetReturn;
+  if (row.loopSteps !== undefined) intent.loopSteps = row.loopSteps;
+  if (row.expectedPostState) intent.expectedPostState = row.expectedPostState;
+  return intent;
 }
 
 /**
- * Reserve-first allocation. Deployment intents are only emitted when a non-preserve
- * strategy clears the hurdle and the book is in Normal. Otherwise: hold liquid.
+ * Prefer extending the composed stack by one concurrent leg over picking a
+ * mutually exclusive strategy id.
  */
-export function proposeFromComparison(args: {
-  comparison: ComparisonResult;
+export function proposeFromStack(args: {
+  stack: CapitalStack;
+  active: readonly LegKind[];
   riskState: RiskState;
   step: number;
-  alreadyDeployed: boolean;
 }): Proposal {
-  const rec = args.comparison.recommendation;
-  const evaln = pick(args.comparison);
-  const preserve = rec.action === 'preserve-capital' || !rec.clearsHurdle;
-  const blocked = args.riskState !== 'Normal';
-  const hold = preserve || blocked || args.alreadyDeployed;
-
-  if (hold) {
+  if (args.riskState !== 'Normal') {
+    const kind =
+      args.riskState === 'Emergency'
+        ? 'unwind'
+        : args.riskState === 'Deleveraging'
+          ? 'repay'
+          : 'hold';
     const intent: ActionIntent = {
-      id: `s${args.step}-hold`,
-      kind:
-        args.riskState === 'Emergency'
-          ? 'unwind'
-          : args.riskState === 'Deleveraging'
-            ? 'repay'
-            : 'hold',
-      notionalUsd: evaln.equityUsd,
+      id: `s${args.step}-${kind}`,
+      kind,
+      notionalUsd: args.stack.ownerEquityUsd,
       riskIncreasing: false,
       reducesRisk: args.riskState === 'Deleveraging' || args.riskState === 'Emergency',
     };
-    const net = evaln.yield.estimatedNetApy;
-    if (net !== undefined) intent.expectedNetReturn = net;
-    return { id: `paper-${args.step}-hold`, intents: [intent] };
+    return { id: `paper-${args.step}-${kind}`, intents: [intent] };
   }
+  const step = nextStackStepProposal(args.stack, args.active, args.step);
+  return { id: step.id, intents: step.intents.map(toIntent) };
+}
 
-  const intents: ActionIntent[] = [];
-  const net = evaln.yield.estimatedNetApy;
-  const deployUsd = evaln.deployedUsd.gt(0) ? evaln.deployedUsd : evaln.equityUsd;
-
-  intents.push({
-    id: `s${args.step}-swap`,
-    kind: 'swap',
-    notionalUsd: deployUsd,
+/** @deprecated diagnostic path — paper loop uses proposeFromStack. */
+export function proposeFromComparison(args: {
+  stack?: CapitalStack;
+  active?: readonly LegKind[];
+  comparison?: { recommendation: { action: string; strategyId: string; clearsHurdle: boolean } };
+  riskState: RiskState;
+  step: number;
+  alreadyDeployed?: boolean;
+}): Proposal {
+  if (args.stack) {
+    return proposeFromStack({
+      stack: args.stack,
+      active: args.active ?? [],
+      riskState: args.riskState,
+      step: args.step,
+    });
+  }
+  const intent: ActionIntent = {
+    id: `s${args.step}-hold`,
+    kind: 'hold',
+    notionalUsd: ZERO,
     riskIncreasing: false,
-    ...(net !== undefined ? { expectedNetReturn: net } : {}),
-  });
-
-  if (evaln.id === 'hold-lst' || evaln.id.startsWith('loop') || evaln.id === 'hedged-carry') {
-    const stake: ActionIntent = {
-      id: `s${args.step}-stake`,
-      kind: 'stake',
-      notionalUsd: deployUsd,
-      riskIncreasing: true,
-      expectedNetReturn: net,
-    };
-    intents.push(stake);
-  }
-
-  if (evaln.debtUsd.gt(0) && evaln.id.startsWith('loop')) {
-    const steps = evaln.id === 'loop-3x' ? 2 : 1;
-    intents.push({
-      id: `s${args.step}-borrow`,
-      kind: 'borrow',
-      notionalUsd: evaln.debtUsd,
-      riskIncreasing: true,
-      expectedNetReturn: net,
-      loopSteps: steps,
-    });
-  }
-
-  if (evaln.id === 'hedged-carry') {
-    intents.push({
-      id: `s${args.step}-hedge`,
-      kind: 'open_hedge',
-      notionalUsd: deployUsd,
-      riskIncreasing: true,
-      expectedNetReturn: net,
-    });
-  }
-
-  if (evaln.id === 'lp') {
-    intents.push({
-      id: `s${args.step}-lp`,
-      kind: 'rebalance',
-      notionalUsd: deployUsd,
-      riskIncreasing: true,
-      expectedNetReturn: net,
-    });
-  }
-
-  if (intents.length === 1) {
-    intents[0]!.kind = 'hold';
-    intents[0]!.riskIncreasing = false;
-  }
-
-  return { id: `paper-${args.step}-deploy-${evaln.id}`, intents };
+  };
+  return { id: `paper-${args.step}-hold`, intents: [intent] };
 }
 
 export function isRiskIncreasingProposal(proposal: Proposal): boolean {

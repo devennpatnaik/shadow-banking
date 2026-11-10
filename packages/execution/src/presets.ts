@@ -1,7 +1,7 @@
 import { d } from '@shadow-banking/core';
 import type { Proposal } from '@shadow-banking/risk';
 
-export const PRESET_IDS = ['hold-liquid', 'loop-step'] as const;
+export const PRESET_IDS = ['hold-liquid', 'loop-step', 'stack-step'] as const;
 export type ExecutionPreset = (typeof PRESET_IDS)[number];
 
 export function isExecutionPreset(raw: string): raw is ExecutionPreset {

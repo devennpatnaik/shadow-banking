@@ -15,6 +15,7 @@ import {
   PHASE6_BROADCAST_ENV,
 } from './envelope.js';
 import { isExecutionPreset, presetProposal } from './presets.js';
+import { stackStepProposal } from './stack-preset.js';
 import { proposeExecution } from './propose.js';
 import { formatProposal, formatStored } from './report.js';
 import { printJson, proposalToJson } from './serialize.js';
@@ -29,7 +30,7 @@ import {
 } from './store.js';
 
 export const USAGE = `Usage:
-  pnpm execution propose [--preset hold-liquid|loop-step] [--intents <file>] [--net 0.12] [--json]
+  pnpm execution propose [--preset hold-liquid|loop-step|stack-step] [--intents <file>] [--net 0.12] [--json]
   pnpm execution show --id <id> [--dir .cache/execution] [--json]
   pnpm execution approve --id <id> [--dir .cache/execution] [--json]
   pnpm execution reject --id <id> [--dir .cache/execution] [--json]
@@ -39,7 +40,7 @@ Phase 5 assisted execution: construct calldata/SDK descriptors, mock-simulate,
 ask the risk governor, write a proposal file. approve marks approved ONLY.
 It does NOT sign, submit, or broadcast. Exit 2 = governor/policy veto.
 
-  --preset            hold-liquid (default) | loop-step
+  --preset            hold-liquid (default) | loop-step | stack-step (next concurrent leg)
   --intents <file>    Controller/risk Proposal JSON (id + intents[])
   --net <apy>         Expected net return on risk-increasing presets (else veto)
   --hedge             Attach optional Hyperliquid hedge SDK stub
@@ -133,13 +134,28 @@ export async function runExecutionCli(
       const net = arg(rest, '--net');
       const proposal = intentsPath
         ? hydrateProposal(readJsonFile(intentsPath))
-        : isExecutionPreset(presetRaw)
-          ? presetProposal(presetRaw, net)
-          : (() => {
-              throw new Error(
-                `unknown --preset ${presetRaw}; use ${['hold-liquid', 'loop-step'].join('|')}`,
-              );
-            })();
+        : presetRaw === 'stack-step'
+          ? stackStepProposal(
+              (() => {
+                const snapshotPath = arg(rest, '--snapshot');
+                const seed = arg(rest, '--seed');
+                const hurdleArg = arg(rest, '--hurdle');
+                const reserve = arg(rest, '--reserve');
+                return {
+                  ...(snapshotPath ? { snapshotPath } : {}),
+                  ...(seed ? { seed } : {}),
+                  ...(hurdleArg ? { hurdle: hurdleArg } : {}),
+                  ...(reserve ? { reserve } : {}),
+                };
+              })(),
+            )
+          : isExecutionPreset(presetRaw)
+            ? presetProposal(presetRaw, net)
+            : (() => {
+                throw new Error(
+                  `unknown --preset ${presetRaw}; use ${['hold-liquid', 'loop-step', 'stack-step'].join('|')}`,
+                );
+              })();
       const hurdle = arg(rest, '--hurdle');
       const fixture = parseFixture(arg(rest, '--fixture'));
       const construct = { includeHedgeStub: flag(rest, '--hedge') };

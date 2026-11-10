@@ -6,3 +6,7 @@ export * from './candidates.js';
 export * from './compare.js';
 export * from './serialize.js';
 export * from './report.js';
+export * from './stack-types.js';
+export * from './compose.js';
+export * from './stack-intents.js';
+export * from './infer.js';

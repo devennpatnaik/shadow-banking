@@ -20,10 +20,13 @@ import { d, parseDisclosureProfile } from '@shadow-banking/core';
 import {
   compareStrategies,
   comparisonToJson,
+  composeStack,
   formatComparison,
+  formatStack,
   loadSnapshot,
   resolveCapital,
   resolveMarket,
+  stackToJson,
   type FundingBasis,
 } from '@shadow-banking/strategy';
 import { banner } from './format.js';
@@ -44,12 +47,14 @@ function parseFunding(raw: string | undefined): FundingBasis {
 
 function strategyUsage(): string {
   return `Usage:
+  pnpm sb stack --snapshot docs/data/market-snapshot-2026-10-21.json --seed 1000 [--json]
+  pnpm sb strategy stack --seed 1000 --json
   pnpm sb strategy compare --snapshot docs/data/market-snapshot-2026-10-21.json --seed 1000
   pnpm sb strategy --json
 
-Wraps @shadow-banking/strategy. Default subcommand is compare.
-All printed APYs are estimates from a dated snapshot, not realized returns.
-If nothing clears the hurdle, recommendedAction is hold_liquid (preserve capital).`;
+Wraps @shadow-banking/strategy. Default subcommand is stack.
+compare is a diagnostic single-strategy table.
+Hold liquid = reserve-only stack. Hurdle 10% annualized net, configurable.`;
 }
 
 function accountingUsage(): string {
@@ -64,28 +69,7 @@ NAV = assets − liabilities. Borrowed principal is not income.
 Annualized yield is an ESTIMATE.`;
 }
 
-export function cmdStrategy(io: Io, args: ParsedArgs): number {
-  const sub = args.rest[0] ?? 'compare';
-  if (sub === 'help') {
-    writeOut(
-      io,
-      args.json,
-      {
-        ok: true,
-        command: 'strategy',
-        stub: false,
-        source: '@shadow-banking/strategy',
-        usage: strategyUsage(),
-      },
-      strategyUsage(),
-    );
-    return EXIT_OK;
-  }
-  if (sub !== 'compare') {
-    io.stderr.write(`unknown strategy subcommand "${sub}"\n\n${strategyUsage()}\n`);
-    return EXIT_ERROR;
-  }
-
+function loadStrategyInput(args: ParsedArgs) {
   const snapshotPath = flagValue(args.flags, '--snapshot') ?? defaultSnapshotPath();
   if (!snapshotPath) throw new Error('pass --snapshot <file> (no default snapshot found)');
   const snapshot = loadSnapshot(snapshotPath);
@@ -111,7 +95,7 @@ export function cmdStrategy(io: Io, args: ParsedArgs): number {
     ...(reserve !== undefined ? { reserveRate: d(reserve) } : {}),
     ...(disclosure ? { disclosure } : {}),
   });
-  const result = compareStrategies({
+  return {
     market,
     capital,
     hurdleApy: hurdle,
@@ -119,23 +103,69 @@ export function cmdStrategy(io: Io, args: ParsedArgs): number {
     includeUnwindCosts: !flagOn(args.flags, '--no-unwind'),
     hedgedLongShare: d(flagValue(args.flags, '--hedged-long') ?? '0.60'),
     ...(disclosure ? { disclosure } : {}),
-  });
-  const preserve = result.recommendation.action === 'preserve-capital';
+  };
+}
+
+export function cmdStrategy(io: Io, args: ParsedArgs): number {
+  const sub = args.rest[0] ?? 'stack';
+  if (sub === 'help') {
+    writeOut(
+      io,
+      args.json,
+      {
+        ok: true,
+        command: 'strategy',
+        stub: false,
+        source: '@shadow-banking/strategy',
+        usage: strategyUsage(),
+      },
+      strategyUsage(),
+    );
+    return EXIT_OK;
+  }
+  if (sub === 'compare') {
+    const result = compareStrategies(loadStrategyInput(args));
+    const preserve = result.recommendation.action === 'preserve-capital';
+    const payload = {
+      ok: true,
+      command: 'strategy',
+      stub: false,
+      source: '@shadow-banking/strategy',
+      noDeployment: preserve,
+      recommendedAction: preserve ? 'hold_liquid' : 'paper_model_only',
+      clearsHurdle: result.recommendation.clearsHurdle,
+      result: comparisonToJson(result),
+    };
+    writeOut(
+      io,
+      args.json,
+      payload,
+      banner('Strategy (diagnostic)', '@shadow-banking/strategy') + '\n' + formatComparison(result),
+    );
+    return EXIT_OK;
+  }
+
+  if (sub !== 'stack' && sub !== 'compose') {
+    io.stderr.write(`unknown strategy subcommand "${sub}"\n\n${strategyUsage()}\n`);
+    return EXIT_ERROR;
+  }
+
+  const stack = composeStack(loadStrategyInput(args));
   const payload = {
     ok: true,
-    command: 'strategy',
+    command: args.command === 'stack' ? 'stack' : 'strategy',
     stub: false,
     source: '@shadow-banking/strategy',
-    noDeployment: preserve,
-    recommendedAction: preserve ? 'hold_liquid' : 'paper_model_only',
-    clearsHurdle: result.recommendation.clearsHurdle,
-    result: comparisonToJson(result),
+    noDeployment: stack.noDeployment,
+    recommendedAction: stack.recommendedAction,
+    clearsHurdle: stack.clearsHurdle,
+    result: stackToJson(stack),
   };
   writeOut(
     io,
     args.json,
     payload,
-    banner('Strategy', '@shadow-banking/strategy') + '\n' + formatComparison(result),
+    banner('Capital stack', '@shadow-banking/strategy') + '\n' + formatStack(stack),
   );
   return EXIT_OK;
 }

@@ -1,3 +1,5 @@
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import {
   EXIT_ERROR,
@@ -137,5 +139,32 @@ describe('approve/reject/broadcast units', () => {
   it('refuseBroadcast always throws BroadcastRefused', () => {
     expect(() => refuseBroadcast({})).toThrow(BroadcastRefused);
     expect(() => refuseBroadcast({ [PHASE6_BROADCAST_ENV]: '1' })).toThrow(BroadcastRefused);
+  });
+
+  it('propose stack-step on high-carry prefers a stack leg over a strategy brand', async () => {
+    const dir = tmpDir();
+    const snapshot = join(
+      dirname(fileURLToPath(import.meta.url)),
+      '../../strategy/test/fixtures/high-carry-snapshot.json',
+    );
+    const r = await capture([
+      'propose',
+      '--json',
+      '--preset',
+      'stack-step',
+      '--snapshot',
+      snapshot,
+      '--seed',
+      '600',
+      '--dir',
+      dir,
+    ]);
+    expect(r.code).toBe(EXIT_OK);
+    const json = parseStdoutJson(r.stdout);
+    expect(json['status']).toBe('draft');
+    expect(json['veto']).toBe(false);
+    const actions = json['actions'] as { kind: string; functionName: string }[];
+    expect(actions.some((a) => a.kind === 'stake' || a.kind === 'swap')).toBe(true);
+    expect(actions[0]?.functionName).not.toBe('hold');
   });
 });

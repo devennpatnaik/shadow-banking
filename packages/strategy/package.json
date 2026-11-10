@@ -2,7 +2,7 @@
   "name": "@shadow-banking/strategy",
   "version": "0.1.0",
   "private": true,
-  "description": "Strategy economics and risk-comparison engine: hold LST, recursive loops, hedged carry, LP, and preserve-liquid; configurable net hurdle; CLI tables and --json.",
+  "description": "Capital-stack composer: concurrent legs on the same equity, plus diagnostic single-strategy compare. Configurable net hurdle; CLI tables and --json.",
   "type": "module",
   "exports": {
     ".": {

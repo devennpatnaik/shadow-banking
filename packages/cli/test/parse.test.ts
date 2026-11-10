@@ -27,6 +27,10 @@ describe('parseArgs', () => {
     expect(parseArgs(['controller', '--json']).command).toBe('paper');
   });
 
+  it('maps stack alias', () => {
+    expect(parseArgs(['stack', '--json']).command).toBe('stack');
+  });
+
   it('maps execution aliases', () => {
     expect(parseArgs(['execution', 'propose', '--json']).command).toBe('execution');
     expect(parseArgs(['exec', 'approve', '--id', 'x']).command).toBe('execution');

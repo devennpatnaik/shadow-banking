@@ -1,5 +1,6 @@
 import { toJsonNumber, type Decimal } from '@shadow-banking/core';
 import type { ComparisonResult, StrategyEvaluation } from './types.js';
+import type { CapitalStack, StackLeg, ProposedStackLeg } from './stack-types.js';
 
 function dec(v: Decimal | null | undefined): string | null {
   if (v === undefined || v === null) return null;
@@ -88,5 +89,80 @@ export function comparisonToJson(result: ComparisonResult): Record<string, unkno
       reasons: result.recommendation.reasons,
     },
     warnings: result.warnings,
+    mode: 'diagnostic_single_strategy',
+  };
+}
+
+export function stackLegToJson(leg: StackLeg): Record<string, unknown> {
+  return {
+    id: leg.id,
+    order: leg.order,
+    kind: leg.kind,
+    label: leg.label,
+    assetSymbol: leg.assetSymbol,
+    ownerEquityUsd: dec(leg.ownerEquityUsd),
+    borrowedCapitalUsd: dec(leg.borrowedCapitalUsd),
+    notionalUsd: dec(leg.notionalUsd),
+    incomeUsd: dec(leg.incomeUsd),
+    financingUsd: dec(leg.financingUsd),
+    executionUsd: dec(leg.executionUsd),
+    expectedLossUsd: dec(leg.expectedLossUsd),
+    estimatedNetUsd: dec(leg.estimatedNetUsd),
+    estimatedNetApy: dec(leg.estimatedNetApy),
+    marginalNetUsd: dec(leg.marginalNetUsd),
+    marginalNetApy: dec(leg.marginalNetApy),
+    healthFactor: dec(leg.healthFactor),
+    liquidationDistance: dec(leg.liquidationDistance),
+    leverage: dec(leg.leverage),
+    notes: leg.notes,
+  };
+}
+
+function proposedToJson(p: ProposedStackLeg | null): Record<string, unknown> | null {
+  if (!p) return null;
+  return {
+    kind: p.kind,
+    label: p.label,
+    marginalNetApy: dec(p.marginalNetApy),
+    reason: p.reason,
+  };
+}
+
+export function stackToJson(stack: CapitalStack): Record<string, unknown> {
+  return {
+    figures: 'estimates',
+    snapshotDate: stack.snapshotDate,
+    hurdleApy: dec(stack.hurdleApy),
+    horizonDays: stack.horizonDays,
+    seedUsd: dec(stack.seedUsd),
+    ownerEquityUsd: dec(stack.ownerEquityUsd),
+    borrowedCapitalUsd: dec(stack.borrowedCapitalUsd),
+    reserveUsd: dec(stack.reserveUsd),
+    productiveUsd: dec(stack.productiveUsd),
+    collateralUsd: dec(stack.collateralUsd),
+    idleBorrowedUsd: dec(stack.idleBorrowedUsd),
+    debtUsd: dec(stack.debtUsd),
+    hedgeNotionalUsd: dec(stack.hedgeNotionalUsd),
+    navUsd: dec(stack.navUsd),
+    healthFactor: dec(stack.healthFactor),
+    liquidationDistance: dec(stack.liquidationDistance),
+    leverage: dec(stack.leverage),
+    legs: stack.legs.map(stackLegToJson),
+    consolidated: {
+      grossIncomeUsd: dec(stack.consolidated.grossIncomeUsd),
+      grossApy: dec(stack.consolidated.grossApy),
+      financingUsd: dec(stack.consolidated.financingUsd),
+      executionUsd: dec(stack.consolidated.executionUsd),
+      expectedLossUsd: dec(stack.consolidated.expectedLossUsd),
+      estimatedNetUsd: dec(stack.consolidated.estimatedNetUsd),
+      estimatedNetApy: dec(stack.consolidated.estimatedNetApy),
+    },
+    consolidatedNetApy: dec(stack.consolidatedNetApy),
+    clearsHurdle: stack.clearsHurdle,
+    noDeployment: stack.noDeployment,
+    recommendedAction: stack.recommendedAction,
+    stopReason: stack.stopReason,
+    nextProposedLeg: proposedToJson(stack.nextProposedLeg),
+    warnings: stack.warnings,
   };
 }

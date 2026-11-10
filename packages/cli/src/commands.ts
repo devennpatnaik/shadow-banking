@@ -14,12 +14,20 @@ import { EXIT_ERROR, EXIT_OK, EXIT_VETO, type Io } from './io.js';
 import { PAPER_ENVELOPE, jsonSafe, printJson, writeOut } from './json.js';
 import { banner, kvTable } from './format.js';
 import { DEFAULT_HURDLE } from './defaults.js';
-import { loadBook, loadProfile, loadRiskInput } from './load.js';
+import { defaultMarketSnapshotPath, loadBook, loadProfile, loadRiskInput } from './load.js';
 import { cmdAccounting, cmdStrategy } from './engines.js';
 import { cmdPaper } from './paper.js';
 import { cmdExecution } from './execution.js';
 import { USAGE, flagOn, flagValue, type ParsedArgs } from './parse.js';
 import { actionCopy, evaluateGovernorSnapshot } from '@shadow-banking/risk';
+import {
+  composeStack,
+  formatStack,
+  loadSnapshot,
+  resolveCapital,
+  resolveMarket,
+  stackToJson,
+} from '@shadow-banking/strategy';
 import {
   PRESET_IDS,
   buildPreset,
@@ -48,6 +56,7 @@ export function cmdHelp(io: Io, json: boolean): number {
           'disclosures',
           'sim',
           'strategy',
+          'stack',
           'accounting',
           'risk',
           'paper',
@@ -339,6 +348,8 @@ export function cmdStatus(io: Io, args: ParsedArgs): number {
   let simAction: string | null = null;
   let clearsHurdle = false;
   let noDeployment = true;
+  let stackJson: Record<string, unknown> | null = null;
+  let stackText = '';
   if (!flagOn(args.flags, '--no-sim')) {
     try {
       const rec = simulateLoop(loadSimInput(args.flags)).recommendation;
@@ -347,6 +358,34 @@ export function cmdStatus(io: Io, args: ParsedArgs): number {
       noDeployment = rec.action === 'hold-liquid' || !rec.clearsHurdle;
     } catch {
       noDeployment = true;
+    }
+  }
+  const marketPath = flagValue(args.flags, '--market') ?? defaultMarketSnapshotPath();
+  if (marketPath) {
+    try {
+      const snap = loadSnapshot(marketPath);
+      const seed = d(flagValue(args.flags, '--seed') ?? snapshot.navUsd);
+      const hurdle = d(flagValue(args.flags, '--hurdle') ?? snap.hurdle ?? 0.1);
+      const market = resolveMarket({ snapshot: snap, seedUsd: seed, hurdleApy: hurdle });
+      const capital = resolveCapital({
+        seedUsd: seed,
+        hurdleApy: hurdle,
+        ...(book ? { balanceSheet: book } : {}),
+      });
+      const stack = composeStack({
+        market,
+        capital,
+        hurdleApy: hurdle,
+        horizonDays: 365,
+        includeUnwindCosts: true,
+        hedgedLongShare: d('0.60'),
+      });
+      stackJson = stackToJson(stack);
+      stackText = formatStack(stack);
+      noDeployment = stack.noDeployment;
+      clearsHurdle = stack.clearsHurdle;
+    } catch {
+      // keep simulator noDeployment
     }
   }
   const evaln = evaluateGovernorSnapshot(snapshot, { noDeployment });
@@ -369,6 +408,7 @@ export function cmdStatus(io: Io, args: ParsedArgs): number {
     noDeployment: evaln.noDeployment,
     clearsHurdle,
     simulatorAction: simAction,
+    stack: stackJson,
     bookPresent: Boolean(book),
     action: actionCopy(evaln.recommendedAction),
     assistedExecution: {
@@ -394,6 +434,7 @@ export function cmdStatus(io: Io, args: ParsedArgs): number {
     ]),
     '',
     actionCopy(evaln.recommendedAction),
+    stackText ? `\n${stackText}` : '',
     'Phase 5: propose + approve only. Never execute live transactions. No signing keys in this interface.',
   ].join('\n');
   writeOut(io, args.json, payload, text);
@@ -424,6 +465,8 @@ export function dispatch(io: Io, args: ParsedArgs): number {
       return cmdSim(io, args);
     case 'strategy':
       return cmdStrategy(io, args);
+    case 'stack':
+      return cmdStrategy(io, { ...args, rest: ['stack', ...args.rest] });
     case 'accounting':
       return cmdAccounting(io, args);
     case 'risk':

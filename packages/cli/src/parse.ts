@@ -4,6 +4,7 @@ export type CommandName =
   | 'disclosures'
   | 'sim'
   | 'strategy'
+  | 'stack'
   | 'accounting'
   | 'risk'
   | 'status'
@@ -16,6 +17,7 @@ export const COMMANDS: readonly CommandName[] = [
   'disclosures',
   'sim',
   'strategy',
+  'stack',
   'accounting',
   'risk',
   'status',
@@ -35,6 +37,7 @@ const ALIASES: Record<string, CommandName> = {
   sim: 'sim',
   simulator: 'sim',
   strategy: 'strategy',
+  stack: 'stack',
   accounting: 'accounting',
   risk: 'risk',
   status: 'status',
@@ -137,7 +140,8 @@ Commands:
   balance-sheet    Consolidated balance sheet from packages/core (optional --book JSON)
   disclosures      Disclosure profile, deployable capital, required reserve (--file JSON)
   sim              Wrap the recursive-loop simulator (presets | run | compare | stress)
-  strategy         Strategy economics engine (@shadow-banking/strategy)
+  strategy         Strategy engine (@shadow-banking/strategy): stack (default) or compare
+  stack            Compose concurrent legs on the same equity (alias of strategy stack)
   accounting       Accounting ledger (@shadow-banking/accounting)
   risk             Risk governor (@shadow-banking/risk): state / evaluate / veto
   paper            Phase 4 paper controller loop (@shadow-banking/controller)

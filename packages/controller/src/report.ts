@@ -18,7 +18,7 @@ export function formatPaperRun(result: PaperRunResult): string {
     `Snapshot ${result.config.snapshotPath}  ·  provider ${result.config.provider}`,
     `State dir ${result.stateDir}`,
     '',
-    `${pad('Posture', 22)}  ${result.posture === 'hold_liquid' ? 'HOLD LIQUID (no-deployment)' : 'DEPLOYED (paper only)'}`,
+    `${pad('Posture', 22)}  ${result.posture === 'hold_liquid' ? 'HOLD LIQUID (reserve-only stack)' : 'STACK (paper only)'}`,
     `${pad('Action', 22)}  ${result.recommendedAction}`,
     `${pad('Veto', 22)}  ${result.veto ? 'YES (exit 2) — vetoed actions were not executed' : 'no'}`,
     `${pad('NAV', 22)}  ${formatMoney(result.nav)}`,
@@ -47,14 +47,13 @@ export function formatPaperRun(result: PaperRunResult): string {
   }
   lines.push('');
   lines.push(formatPerformance(perf));
-  if (result.lastComparison) {
+  if (result.lastStack) {
     lines.push('');
     lines.push(
-      `Strategy recommendation: ${result.lastComparison.recommendation.action} (${result.lastComparison.recommendation.strategyId})`,
+      `Stack: ${result.lastStack.legs.map((l) => l.kind).join(' → ')}  net ${result.lastStack.consolidatedNetApy.toFixed(4)}  ${result.lastStack.stopReason}`,
     );
-    for (const r of result.lastComparison.recommendation.reasons) lines.push(`  - ${r}`);
   }
   lines.push('');
-  lines.push('Do not broadcast transactions. Phase 5+ assisted execution is not implemented.');
+  lines.push('Do not broadcast transactions. Phase 5 propose+approve only.');
   return lines.join('\n');
 }
