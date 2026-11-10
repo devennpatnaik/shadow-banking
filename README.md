@@ -1,10 +1,12 @@
 # Shadow Banking
 
-An AI-managed personal shadow-banking platform: software that lets an individual operate a managed financial balance sheet of the kind normally run by banks, hedge funds, and institutional treasuries.
+An AI-managed personal shadow-banking platform: software that puts **one dollar of equity to work in several techniques at the same time** — the kind of stacked balance sheet normally run by banks, hedge funds, and institutional treasuries.
+
+The product is a **simultaneous multi-use stack** (yield-bearing asset, collateral, borrow, redeploy, optional hedge, plus a reserve that is not double-counted as productive), not a picker among mutually exclusive strategies. See [`docs/multi-use-stacks.md`](docs/multi-use-stacks.md).
 
 > **Status:** TypeScript/pnpm monorepo with a consolidated balance-sheet model (`packages/core`), recursive borrowing simulator (`simulator/`), strategy economics engine (`packages/strategy`), opportunity engine (`packages/opportunity`), accounting ledger (`packages/accounting`), risk governor (`packages/risk`), paper portfolio controller (`packages/controller`), Phase 5 assisted execution (`packages/execution`), and an LLM-facing terminal CLI (`packages/cli`). See [Getting started](#getting-started). No web UI.
 
-The full product specification lives in [`docs/spec.md`](docs/spec.md).
+The full product specification lives in [`docs/spec.md`](docs/spec.md). Multi-use stacks: [`docs/multi-use-stacks.md`](docs/multi-use-stacks.md).
 
 ---
 
@@ -38,12 +40,12 @@ pnpm execution propose --preset hold-liquid --json
 pnpm sb execution propose --preset hold-liquid --json
 ```
 
-Read [`AGENTS.md`](AGENTS.md) (and [`.claude/CLAUDE.md`](.claude/CLAUDE.md)) before using the CLI from an agent: `--json` stdout, exit `2` = risk veto, `noDeployment` means hold liquid, Phase 5 is propose+approve only (no live txs).
+Read [`AGENTS.md`](AGENTS.md) (and [`.claude/CLAUDE.md`](.claude/CLAUDE.md)) before using the CLI from an agent: `--json` stdout, exit `2` = risk veto, `noDeployment` / `hold_liquid` is the empty productive stack (reserve/cash only), Phase 5 is propose+approve only (no live txs).
 
 - [`packages/cli`](packages/cli/) — LLM-compatible paper/read-only shell (`status`, `balance-sheet`, `disclosures`, `sim`, `strategy`, `accounting`, `risk`, `paper`, `execution`).
 - [`packages/core`](packages/core/) — consolidated balance-sheet model (disclosures, T0–T3 liquidity tiers, NAV, health factor, deployable capital).
 - [`simulator/`](simulator/) — recursive collateralized-borrowing simulator. All printed APYs are **estimates** from a dated snapshot, not realized returns. Default hurdle: 10% annualized net, configurable.
-- [`packages/strategy`](packages/strategy/) — strategy economics and risk comparison (hold LST, 2x/3x loop, hedged carry, optional LP, preserve-liquid). CLI tables plus `--json`. Default hurdle: 10% annualized net, configurable, not a promise.
+- [`packages/strategy`](packages/strategy/) — stack economics: compose simultaneous legs on the same equity; single-strategy compare (hold LST, loop, hedged carry, LP, preserve-liquid) is a diagnostic. CLI tables plus `--json`. Default hurdle: 10% annualized net, configurable, not a promise.
 - [`packages/opportunity`](packages/opportunity/) — market-snapshot refresh (fixture + live Aave/LST/Hyperliquid). Read-only. `pnpm opportunity refresh` / `show`.
 - [`packages/accounting`](packages/accounting/) — double-entry ledger and consolidated performance report (CLI). Borrowed principal is not income; annualized yield is labeled an estimate.
 - [`packages/risk`](packages/risk/) — risk governor runtime (states, hysteresis, hard-limit veto). `pnpm risk state` / `pnpm risk evaluate`; also used by `pnpm sb risk` and `pnpm sb status`.
@@ -57,6 +59,7 @@ CI (`.github/workflows/ci.yml`) runs typecheck, lint, format check, tests, and s
 | Document                                                     | Spec deliverable | Contents                                                                                                        |
 | ------------------------------------------------------------ | ---------------- | --------------------------------------------------------------------------------------------------------------- |
 | [`docs/architecture.md`](docs/architecture.md)               | §14.1            | Component map, data flow, trust boundaries, module responsibilities, domain model                               |
+| [`docs/multi-use-stacks.md`](docs/multi-use-stacks.md)       | —                | Simultaneous legs on the same equity, consolidated net yield, hold-liquid as the empty productive stack         |
 | [`docs/integrations.md`](docs/integrations.md)               | §14.2            | Inventory of account integrations, protocol interfaces, APIs, SDKs, and MCP servers, with sources and dates     |
 | [`docs/risk-governor.md`](docs/risk-governor.md)             | §14.8            | Monitored metrics, risk states, hard limits, veto semantics, emergency unwind playbooks, fail-safes, monitoring |
 | [`docs/implementation-plan.md`](docs/implementation-plan.md) | §14.9            | Milestones, deliverables, and exit criteria for the seven phases, with a dependency graph                       |
@@ -65,15 +68,15 @@ CI (`.github/workflows/ci.yml`) runs typecheck, lint, format check, tests, and s
 
 ## Product vision
 
-The user provides account connectivity, financial disclosures (income, expenses, assets, liabilities, liquidity needs, risk tolerance), and a seed deposit. The platform builds and manages a personal balance sheet designed to generate recurring yield, deploy capital efficiently, manage liabilities, and compound wealth over time.
+The user provides account connectivity, financial disclosures (income, expenses, assets, liabilities, liquidity needs, risk tolerance), and a seed deposit. The platform builds and manages a personal balance sheet so that **the same equity is used in several techniques at once**.
 
-The core mechanism is a managed loop:
+The core mechanism is a **stack**, not a single play:
 
-**Equity → productive assets → collateral → borrowing → additional productive assets → recurring cash flow → retained earnings → larger balance sheet.**
+**Equity → (productive asset ∧ collateral ∧ borrow ∧ redeploy ∧ optional hedge) + reserve → consolidated net cash flow → retained earnings → larger balance sheet.**
 
-The loop repeats only while the incremental return justifies the incremental risk. The system computes the optimal stopping point for recursive borrowing rather than maximizing leverage, and it must be able to conclude that no available strategy is attractive enough and hold capital in liquid form instead.
+Each additional leg is optional in the sense that it must earn its keep; it is not optional as product identity. Add a leg only while incremental **net** return justifies incremental risk versus the configurable hurdle (default **10% annualized net**, not a promised return). **Hold liquid** is the stack with only the reserve/cash leg — not a peer product that “wins” against the loop.
 
-**The product's output is the user's consolidated net yield after financing costs, transaction costs, losses, and other expenses** — not a protocol's advertised APY.
+**The product's output is the user's consolidated net yield after financing costs, transaction costs, hedges, losses, and other expenses** — not a protocol's advertised APY, and not a per-strategy gross rate.
 
 This is **not** a trading bot, a robo-advisor, a portfolio tracker, or a yield aggregator. It is an automated **personal financial intermediary**.
 
@@ -88,7 +91,7 @@ The platform is built as ten modular services. Each has a placeholder in [`servi
 | Account & disclosure layer | [`services/account-disclosure`](services/account-disclosure/)     | Ingests financial data, user constraints, and available balances. Read-only by default.                  |
 | Balance-sheet engine       | [`services/balance-sheet-engine`](services/balance-sheet-engine/) | Reconciles assets, liabilities, equity, collateral, and available borrowing capacity.                    |
 | Opportunity engine         | [`services/opportunity-engine`](services/opportunity-engine/)     | Collects current yield, borrowing, funding, liquidity, and risk data.                                    |
-| Strategy engine            | [`services/strategy-engine`](services/strategy-engine/)           | Models recursive borrowing, leveraged productive assets, hedged carry, and optional liquidity provision. |
+| Strategy engine            | [`services/strategy-engine`](services/strategy-engine/)           | Composes a simultaneous multi-use stack; single-strategy models are diagnostics for candidate legs.      |
 | Risk governor              | [`services/risk-governor`](services/risk-governor/)               | Enforces hard limits and controls emergency actions. Has authority over strategy and execution.          |
 | Execution layer            | [`services/execution-layer`](services/execution-layer/)           | Submits approved transactions, repayments, withdrawals, and hedges via official APIs/SDKs.               |
 | Accounting engine          | [`services/accounting-engine`](services/accounting-engine/)       | Maintains the ledger and calculates NAV and net performance.                                             |
@@ -100,7 +103,7 @@ Workspaces alongside the services:
 
 - [`packages/core`](packages/core/) — balance-sheet and disclosure engines (Phase 1).
 - [`simulator/`](simulator/) — recursive collateral-and-borrowing loop (Phase 2).
-- [`packages/strategy`](packages/strategy/) — strategy economics and risk comparison (spec §14.5).
+- [`packages/strategy`](packages/strategy/) — stack composer and diagnostic strategy compare (spec §14.5).
 - [`packages/opportunity`](packages/opportunity/) — opportunity engine / market snapshots (spec §14 / Phase 3 data).
 - [`packages/accounting`](packages/accounting/) — ledger and performance report (spec §14.7). Text CLI; no web UI.
 - [`packages/risk`](packages/risk/) — risk governor (spec §7 / §14.8). Paper/read-only CLI.
@@ -133,7 +136,7 @@ Development is incremental. Each phase must be reliable before the next begins.
 These are initial parameters for design and simulation, not conclusions.
 
 - **Seed capital:** approximately **$1,000** to validate the system. The architecture must scale to larger balances.
-- **Evaluation hurdle:** **10% annualized net return**, configurable. This is a bar for comparing strategies, not a promised return and not a mandate to take more risk. If nothing clears the hurdle, the system preserves capital in liquid form.
+- **Evaluation hurdle:** **10% annualized net return**, configurable. This is a bar for adding the next stack leg, not a promised return and not a mandate to take more risk. If no additional leg clears the hurdle, the system keeps the empty productive stack (liquid reserve only).
 - **Liquidity reserve:** **10–30% of deployable capital** as a simulation starting point, not a universal rule. The actual level depends on obligations, volatility, liquidation risk, and withdrawal access.
 
 ---
@@ -177,10 +180,11 @@ The risk governor is designed to prioritize survival over yield and to reject or
 ├── README.md
 ├── AGENTS.md                # how Claude Code / other LLMs run pnpm sb
 ├── docs/
-│   └── spec.md              # full product specification
+│   ├── spec.md              # full product specification
+│   └── multi-use-stacks.md  # simultaneous legs; consolidated net; hold-liquid
 ├── packages/
 │   ├── core/                # balance-sheet domain model
-│   ├── strategy/            # strategy economics + risk comparison
+│   ├── strategy/            # stack composer + diagnostic compare
 │   ├── opportunity/         # market snapshot refresh (fixture + live)
 │   ├── accounting/          # ledger + performance CLI
 │   ├── risk/                # risk governor runtime + veto CLI

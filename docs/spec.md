@@ -9,8 +9,11 @@ Stable goals, constraints, and decisions for the Project. Progress lives in `not
 - Initial seed capital assumption: ~$1,000, architecture must scale to larger balances.
 - Initial evaluation hurdle: 10% annualized net return, configurable.
 - Build incrementally; never start with unrestricted autonomous deployment.
+- **Product identity (2026-11-09):** simultaneous multi-use of the same equity — a stack of legs — not a mutually exclusive strategy menu. Hold-liquid is the empty productive stack. See [`multi-use-stacks.md`](multi-use-stacks.md).
 
 ## Product specification (verbatim from the user)
+
+The numbered sections below are the original spec. **Framing correction:** §1 / §3–§5 describe one stacked use of capital. Treating “hold LST”, “2x loop”, “hedged carry”, and “hold liquid” as peer, mutually exclusive picks is a misread. The recursive loop is the product; hold-liquid is the stopping rule. Details in [`multi-use-stacks.md`](multi-use-stacks.md).
 
 # Build a Comprehensive Personal Shadow-Banking Platform
 
@@ -23,11 +26,11 @@ The user provides:
 - Financial disclosures, including income, expenses, assets, liabilities, liquidity needs, and risk tolerance.
 - An initial seed deposit.
 
-The platform builds and manages a personal financial balance sheet designed to generate recurring yield, deploy capital efficiently, manage liabilities, and compound wealth over time.
+The platform builds and manages a personal financial balance sheet so that **the same equity works in several techniques at once** (productive asset, collateral, borrow, redeploy, optional hedge, plus a liquidity reserve that is not counted as productive yield).
 
-**The product's output is the user's consolidated net yield, after financing costs, transaction costs, losses, and other expenses.**
+**The product's output is the user's consolidated net yield, after financing costs, transaction costs, hedges, losses, and other expenses** — one number for the stack, with per-leg earn/cost underneath. Gross protocol APY is secondary.
 
-The platform should not simply recommend investments. It should determine how the user's capital can be deployed, what assets can support borrowing, how much liquidity should be retained, where borrowed capital should go, and how the resulting balance sheet should be managed over time.
+The platform should not simply recommend a single investment or pick a winner from a strategy menu. It should determine which simultaneous uses the user's equity can support, what assets can be pledged as collateral while still yielding, how much liquidity should be retained, where borrowed capital should go as an additional leg, and how the resulting stacked balance sheet should be managed over time.
 
 The ultimate objective is to increase the productive financial capacity of the user's equity without exposing the user to unacceptable risks.
 
@@ -86,9 +89,9 @@ The platform must clearly distinguish user-owned capital from borrowed capital.
 
 The platform should reproduce selected financial-intermediation functions at the individual level.
 
-The central process is:
+The central process is a **simultaneous stack** (not a one-at-a-time product choice):
 
-**Equity → productive assets → collateral → borrowing → additional productive assets → recurring cash flow → retained earnings → larger balance sheet.**
+**Equity → (productive assets ∧ collateral ∧ borrowing ∧ additional productive use ∧ optional hedge) + reserve → consolidated net cash flow → retained earnings → larger balance sheet.**
 
 For example:
 
@@ -108,7 +111,7 @@ It must also account for collateral haircuts, liquidation thresholds, borrowing 
 
 ## 4. Yield Generation
 
-The system should evaluate multiple forms of recurring yield. Each is an optional component, not a mandatory strategy.
+The system should evaluate multiple forms of recurring yield as **candidate legs of one stack**. Each leg is optional in the sense that it must clear incremental net return versus incremental risk; none is a mutually exclusive alternative to the stack itself. Hold-liquid is the stack with only the reserve/cash leg.
 
 ### A. Yield-bearing collateral
 
@@ -179,9 +182,9 @@ Do not prioritize arbitrage or high-frequency strategies that depend on speed ad
 
 ## 5. Strategy Selection and Capital Allocation
 
-The system should evaluate the user's balance sheet as a whole rather than optimize individual positions in isolation.
+The system should evaluate the user's balance sheet as a whole rather than optimize individual positions in isolation. **Compose a stack**; do not rank mutually exclusive plays and pick one.
 
-For every candidate strategy, calculate:
+For every candidate **leg** (and for the consolidated stack), calculate:
 
 **Expected net return = recurring income − financing costs − execution costs − expected losses and other expenses.**
 
@@ -202,11 +205,11 @@ Show gross yield, estimated net yield, realized net yield, and relevant risk mea
 
 Compare alternatives based on both risk-adjusted return and absolute dollar contribution. Consider the user's total liquidity requirements and existing exposures.
 
-The platform must be able to conclude that no available strategy is sufficiently attractive.
+The platform must be able to conclude that **no additional leg** is sufficiently attractive (empty productive stack).
 
 Use 10% annualized net return as an initial evaluation hurdle, not a promised return or a requirement to take more risk. The hurdle should be configurable.
 
-If no strategy meets the user's criteria, preserve capital in an appropriate liquid form rather than manufacture yield through excessive borrowing.
+If no additional leg meets the user's criteria, preserve capital in an appropriate liquid form rather than manufacture yield through excessive borrowing. That outcome is hold-liquid: reserve only, not a competing product.
 
 ## 6. Liquidity and Liability Management
 
@@ -337,7 +340,7 @@ Build the platform as modular services.
 
 **Opportunity engine:** Collects current yield, borrowing, funding, liquidity, and risk data.
 
-**Strategy engine:** Models recursive borrowing, leveraged productive assets, hedged carry, and optional liquidity provision.
+**Strategy engine:** Composes the simultaneous multi-use stack (recursive borrowing, leveraged productive assets, hedged carry, optional liquidity provision as legs). Single-strategy compare is a diagnostic.
 
 **Risk governor:** Enforces hard limits and controls emergency actions.
 
@@ -416,7 +419,7 @@ Produce:
 2. A list of required account integrations, protocol interfaces, APIs, and SDKs.
 3. A consolidated balance-sheet model.
 4. A simulator for recursive collateralized borrowing.
-5. A strategy economics and risk-comparison engine.
+5. A strategy economics engine whose primary job is composing a simultaneous multi-use stack (single-strategy comparison is a diagnostic).
 6. An LLM-compatible terminal CLI (`pnpm sb`) for status, balance sheet, simulation, and risk — not a web dashboard.
 7. An accounting ledger and performance report.
 8. A risk governor and emergency-action specification.
@@ -429,7 +432,7 @@ Build a system that treats the user's finances as one managed balance sheet rath
 
 The platform should continuously answer:
 
-**How much of the user's equity is available, how much productive capital can it safely support, what net cash flow does that capital generate, what obligations must be met, and how should retained earnings be deployed?**
+**With this equity, which simultaneous uses are active, what does each leg earn or cost, what is consolidated net yield, what is health factor / liquidation distance, what obligations must be met, and what next leg is proposed or vetoed?**
 
 The goal is to grow productive financial capacity and net wealth through disciplined collateralized borrowing, recurring yield, liability management, risk control, and compounding.
 

@@ -1,6 +1,6 @@
 # Product architecture and data flow
 
-Spec deliverable §14.1. Companion documents: [`integrations.md`](integrations.md) (external interfaces), [`risk-governor.md`](risk-governor.md) (limits, states, emergency actions), [`implementation-plan.md`](implementation-plan.md) (phasing). The product specification is [`spec.md`](spec.md); section references below (§n) point to it.
+Spec deliverable §14.1. Companion documents: [`integrations.md`](integrations.md) (external interfaces), [`risk-governor.md`](risk-governor.md) (limits, states, emergency actions), [`implementation-plan.md`](implementation-plan.md) (phasing), [`multi-use-stacks.md`](multi-use-stacks.md) (simultaneous legs on the same equity). The product specification is [`spec.md`](spec.md); section references below (§n) point to it.
 
 This document describes the target architecture. Phases 1–3 (read-only model, simulator, opportunity/risk engine) are being built first in a TypeScript monorepo; later-phase components are specified here so that early components are shaped to fit them.
 
@@ -15,7 +15,7 @@ This document describes the target architecture. Phases 1–3 (read-only model, 
 5. **Signing keys are isolated.** Private keys and venue trading keys live only in a signer component that accepts narrowly-typed, pre-approved intents. The AI layer, strategy engine, and UI never see key material (§11).
 6. **Fail closed.** Missing data, stale prices, unreachable governor, or failed simulation all block risk-increasing actions. Risk-reducing actions remain possible with degraded data under explicit rules (see `risk-governor.md`).
 7. **Everything is recorded.** Every input snapshot, proposal, evaluation, authorization, transaction, and failure is an append-only audit event (§10 audit layer).
-8. **"Do nothing" is a first-class outcome.** The strategy engine and portfolio controller must be able to conclude that no deployment clears the hurdle and hold capital in liquid form (§5, §9).
+8. **The stack is the product; the empty productive stack is a first-class outcome.** The strategy engine composes simultaneous uses of the same equity (yield, collateral, borrow, redeploy, optional hedge, plus a non-productive reserve). Single-strategy compare is a diagnostic for candidate legs, not the book’s identity. Add a leg only while incremental net return clears the configurable hurdle (default 10% annualized net, not a promise). **Hold liquid** is the stack with only the reserve/cash leg (§5, §9; [`multi-use-stacks.md`](multi-use-stacks.md)).
 
 ---
 
@@ -39,7 +39,7 @@ flowchart TB
 
     subgraph CORE["Core engines (no credentials)"]
         BSE["Balance-sheet engine<br/>reconciliation, liquidity tiers,<br/>borrowing capacity"]
-        STR["Strategy engine<br/>loop / carry / LP models,<br/>marginal economics, stopping point"]
+        STR["Strategy engine<br/>stack composer (legs),<br/>marginal economics, stopping point"]
         PC["Portfolio controller<br/>allocation, reserves,<br/>repayment, compounding"]
         ACC["Accounting engine<br/>ledger, NAV, net yield,<br/>performance report"]
     end
@@ -116,7 +116,7 @@ Interfaces are typed messages (TypeScript types shared from a `domain` package i
 | Account & disclosure → balance-sheet | `AccountSnapshot[]`, `DisclosureProfile`, `AuthorizationScope` | Observed balances and positions per account with provenance and freshness; user disclosures (§2B); which accounts/assets the platform may observe vs. manage. |
 | Opportunity → strategy, risk governor | `MarketSnapshot` | Supply/borrow APRs, utilization, caps, LTV/LT/liquidation bonus per reserve and E-mode, funding rates, order-book depth, oracle prices, gas prices, LST exchange rates and withdrawal-queue state, protocol health flags. |
 | Balance-sheet → strategy, controller, governor, UI | `BalanceSheet` | Consolidated assets by liquidity tier, liabilities, collateral positions, equity, reserve requirement, available borrowing capacity, contingent obligations. |
-| Strategy → controller | `StrategyEvaluation[]` | Per candidate: gross yield, cost stack, expected net return, incremental ROE per step, stopping point, risk measures, minimum size, entry/exit plan, data provenance. |
+| Strategy → controller | `StrategyEvaluation[]` | Per candidate **leg or stack**: gross yield, cost stack, expected net return, incremental ROE per step, stopping point, risk measures, minimum size, entry/exit plan, data provenance. Isolated single-strategy rows are diagnostics. |
 | Controller → governor | `ActionIntent[]` (a `Proposal`) | Ordered atomic intents: supply, borrow, repay, withdraw, swap, stake, open/close hedge, bridge, transfer-to-reserve; each with max slippage, deadline, expected post-state. |
 | Governor → execution | `Authorization` | Intent hash, decision (approve / approve-modified / reject), modified parameters, risk state at decision, expiry, signature of the governor instance. |
 | Execution → signer | `SigningRequest` | Fully-constructed transaction or venue action, referenced `Authorization`, simulation result hash. The signer re-validates policy before signing. |
@@ -153,7 +153,7 @@ Numbered stages:
 
 1. **Ingest.** The account & disclosure layer pulls balances and positions from aggregators, RPC reads, and venue info endpoints; stores an `AccountSnapshot` with source, timestamp, and freshness. In parallel the opportunity engine pulls market data into a `MarketSnapshot`. Both are read-only.
 2. **Reconcile.** The balance-sheet engine merges snapshots and ledger state into a `BalanceSheet`: assets classified by liquidity tier, liabilities with accrued interest, collateral positions with health factors, equity, reserve requirement derived from disclosures, available borrowing capacity under the governor's limits (not the protocol's maximum).
-3. **Evaluate strategies.** The strategy engine prices each candidate strategy step by step: expected net return = recurring income − financing − execution − expected losses (§5); computes the incremental ROE and liquidation distance per leverage step and the optimal stopping point (§4C); emits candidates that clear the configurable hurdle, or none.
+3. **Evaluate the stack.** The strategy engine prices simultaneous legs on the same equity and the incremental next leg: expected net return = recurring income − financing − execution − expected losses (§5); computes incremental ROE and liquidation distance per added leg and the optimal stopping point (§4C); emits a stack (possibly only the reserve leg) whose consolidated net is measured against the configurable hurdle. Isolated strategy rows remain diagnostics.
 4. **Allocate.** The portfolio controller sizes the reserve first, then decides deployments, repayments, hedges, and compounding of retained earnings (§6, §9). Output is a `Proposal` of ordered `ActionIntent`s with expected post-state.
 5. **Risk governor pre-trade evaluation.** Each intent is evaluated against hard limits and the current risk state, using the governor's own view of the balance sheet and market data. Decisions are approve, approve with reduced size, or reject (see `risk-governor.md` §5).
 6. **Execute.** The execution layer constructs the concrete transaction or venue action, simulates it (mandatory), compares the simulated post-state to the expected post-state, obtains user authorization where the phase requires it, requests a signature from the signer (which re-checks allowlists and spending limits), submits, and tracks confirmation.
@@ -292,7 +292,7 @@ Each module is a separately deployable service or worker with the responsibility
 - **Inputs.** `AccountSnapshot[]`, `LedgerEntry[]`, `MarketSnapshot` (prices, LTV/LT, exchange rates), `DisclosureProfile`, governor limits.
 - **Outputs.** `BalanceSheet` (point-in-time), reconciliation diffs (observed vs. ledger), capacity report, liquidity ladder (what can be raised within 1 block / 1 hour / 1 day / 1 week).
 - **Persistence.** Balance-sheet snapshots per cycle; reconciliation exceptions.
-- **Notes.** The first Phase 1–3 deliverable in the monorepo. Must run entirely offline from recorded snapshots for tests and simulation.
+- **Notes.** The first Phase 1–3 deliverable in the monorepo. Must run entirely offline from recorded snapshots for tests and simulation. The same asset may appear as yielding, pledged as collateral, and borrowed-against; those uses must not be collapsed into one netted line that hides reuse ([`multi-use-stacks.md`](multi-use-stacks.md)).
 
 ### 5.3 Opportunity engine (`services/opportunity-engine`)
 
@@ -304,11 +304,11 @@ Each module is a separately deployable service or worker with the responsibility
 
 ### 5.4 Strategy engine (`services/strategy-engine`)
 
-- **Responsibility.** Model each candidate strategy as a sequence of steps and compute gross yield, the full cost stack, expected net return, incremental ROE, liquidation distance, and the optimal stopping point; run stress scenarios; emit evaluations or an explicit "nothing clears the hurdle" result (§4, §5).
-- **Inputs.** `BalanceSheet`, `MarketSnapshot` and history, strategy modules (recursive collateral loop, hedged carry, liquidity provision, hold-liquid baseline), hurdle and user constraints, governor limits (as pre-filters).
-- **Outputs.** `StrategyEvaluation[]` with assumptions, data provenance, minimum viable size, entry/exit plan, and stress results.
+- **Responsibility.** Compose a **simultaneous multi-use stack** on the same equity (productive asset, collateral, borrow, redeploy, optional hedge, reserve). Price each leg and one consolidated net yield after financing, fees, hedges, and expected losses. Single-strategy modules (recursive loop, hedged carry, LP, hold-liquid) are diagnostics for whether a technique belongs as a leg. Emit the current stack plus the proposed next leg, or an explicit empty productive stack when nothing clears the hurdle (§4, §5; [`multi-use-stacks.md`](multi-use-stacks.md)).
+- **Inputs.** `BalanceSheet`, `MarketSnapshot` and history, strategy modules as candidate legs, hurdle and user constraints, governor limits (as pre-filters).
+- **Outputs.** `StrategyEvaluation[]` with per-leg economics, consolidated net, assumptions, data provenance, minimum viable size, entry/exit plan, and stress results.
 - **Persistence.** Evaluation history (for realized-vs-projected comparison), scenario definitions.
-- **Notes.** The Phase 2 simulator is the offline form of this engine; the same code paths must run on recorded and live data.
+- **Notes.** The Phase 2 simulator is the offline form of this engine; the same code paths must run on recorded and live data. Default hurdle: 10% annualized net, configurable, not a promised return.
 
 ### 5.5 Risk governor (`services/risk-governor`)
 
@@ -324,7 +324,7 @@ Each module is a separately deployable service or worker with the responsibility
 - **Inputs.** Authorized `ActionIntent`s, `MarketSnapshot` (for routing, slippage), user approvals, RPC/venue endpoints.
 - **Outputs.** `ExecutionReceipt`s, failure reports, pending-transaction state.
 - **Persistence.** Intent → tx mapping, nonces, submitted payloads, receipts, retries.
-- **Notes.** Holds no keys. Phase 4 dry-run used synthetic receipts. Phase 5 is implemented in `packages/execution` (`pnpm execution propose|show|approve|reject`): construct, mock/`eth_simulateV1` dry-run, user approval on disk. Broadcast is refused until Phase 6. Idempotent by intent hash.
+- **Notes.** Holds no keys. Phase 4 dry-run used synthetic receipts. Phase 5 is implemented in `packages/execution` (`pnpm execution propose|show|approve|reject`): construct, mock/`eth_simulateV1` dry-run, user approval on disk. Proposals are ordered **stack steps** (legs), not unrelated single trades. Broadcast is refused until Phase 6. Idempotent by intent hash.
 
 ### 5.7 Signer (part of execution plane, isolated)
 
@@ -344,15 +344,15 @@ Each module is a separately deployable service or worker with the responsibility
 
 ### 5.9 Portfolio controller (`services/portfolio-controller`)
 
-- **Responsibility.** Decide allocations, reserve levels, debt repayment, hedging, and compounding of retained earnings for the whole balance sheet; produce `Proposal`s (§5, §6, §9).
+- **Responsibility.** Decide allocations, reserve levels, debt repayment, hedging, and compounding of retained earnings for the whole balance sheet; produce `Proposal`s that **extend or reduce the stack** one justified leg at a time (§5, §6, §9).
 - **Inputs.** `BalanceSheet`, `StrategyEvaluation[]`, `DisclosureProfile` (cash needs), current risk state, governor limits, user directives.
-- **Outputs.** `Proposal` with ordered intents and expected post-state; "hold" decisions with reasoning.
+- **Outputs.** `Proposal` with ordered intents (stack steps) and expected post-state; empty-productive-stack (hold) decisions with reasoning.
 - **Persistence.** Decision log with inputs and rationale.
-- **Notes.** Reserve first, repayment second, deployment third. Compounding never increases leverage automatically (§9). In Caution and above the controller may only produce risk-neutral or risk-reducing proposals.
+- **Notes.** Reserve first, repayment second, next productive leg third. Compounding never increases leverage automatically (§9). In Caution and above the controller may only produce risk-neutral or risk-reducing proposals.
 
 ### 5.10 User interface (`services/user-interface`, `packages/cli`)
 
-- **Responsibility.** Show the balance sheet (owned vs. borrowed, liquidity tiers), yield sources (gross, estimated net, realized net), debt and financing costs, risk state and distance to limits, performance, pending proposals with explanations, custody status, and controls (approve, decline, pause, kill, constraints) (§10, §11, §12).
+- **Responsibility.** Show the balance sheet (owned vs. borrowed, liquidity tiers, **multi-use of the same asset**), **active stack legs** (per-leg earn/cost and consolidated net), debt and financing costs, risk state and distance to limits, performance, pending next-leg proposals with explanations, custody status, and controls (approve, decline, pause, kill, constraints) (§10, §11, §12).
 - **Inputs.** Read models from accounting, balance-sheet, governor, controller.
 - **Outputs.** `UserDirective`s; nothing else.
 - **Persistence.** None beyond read-model caches; directives are stored by the receiving service.
@@ -442,7 +442,7 @@ classDiagram
 
     class Strategy {
         +id
-        +type: loop | hedged_carry | lp | hold_liquid
+        +type: stack | loop | hedged_carry | lp | hold_liquid
         +legs
         +venues
         +hurdle

@@ -2,6 +2,8 @@
 
 This repository is operated from the **terminal**. There is no web or graphical UI. Claude Code and other LLMs should drive the paper book through `pnpm sb`.
 
+**Product:** simultaneous **multi-use of the same equity** (a stack of legs), not a choice among mutually exclusive strategies. Hold-liquid is the empty productive stack. See [`docs/multi-use-stacks.md`](docs/multi-use-stacks.md).
+
 ## How to run
 
 From the repo root (Node 20+, pnpm):
@@ -28,7 +30,7 @@ pnpm execution show --id <id> --json
 pnpm sb execution propose --preset hold-liquid --json
 ```
 
-`pnpm sb` is the paper-book entrypoint (`packages/cli`). It wraps `@shadow-banking/core`, `@shadow-banking/simulator`, `@shadow-banking/strategy`, `@shadow-banking/accounting`, `@shadow-banking/risk`, and `@shadow-banking/controller`. Market snapshots are refreshed with `pnpm opportunity` (`@shadow-banking/opportunity`) in fixture or live mode; CI uses `--provider fixture` (no network). Phase 4 paper loop: `pnpm paper run --steps N --seed 1000` (or `pnpm sb paper`). If the strategy engine recommends preserve-capital, `noDeployment` is true — **do not invent a deployment**.
+`pnpm sb` is the paper-book entrypoint (`packages/cli`). It wraps `@shadow-banking/core`, `@shadow-banking/simulator`, `@shadow-banking/strategy`, `@shadow-banking/accounting`, `@shadow-banking/risk`, and `@shadow-banking/controller`. Market snapshots are refreshed with `pnpm opportunity` (`@shadow-banking/opportunity`) in fixture or live mode; CI uses `--provider fixture` (no network). Phase 4 paper loop: `pnpm paper run --steps N --seed 1000` (or `pnpm sb paper`). If `noDeployment` is true, the productive stack is empty — **do not invent legs or a deployment**.
 
 Dedicated governor CLI: `pnpm risk state` / `pnpm risk evaluate` (same veto semantics). Paper controller: `pnpm paper run` / `pnpm paper show`. Assisted execution: `pnpm execution propose|show|approve|reject` (Phase 5; broadcast refused).
 
@@ -45,6 +47,7 @@ Every command accepts `--json` (machine-readable stdout). Default output is a te
 
 - `ok: false` plus process exit `2` means a **risk-governor veto**. Exit `1` is a usage/runtime error. Exit `0` is success (including “hold liquid”).
 - `status --json` fields to read first: `nav`, `equity`, `debt`, `reserves`, `healthFactor`, `hurdle`, `riskState`, `recommendedAction`, `noDeployment`, `veto`.
+- Answer from the book (do not invent): which simultaneous uses of this equity are active, what each leg earns/costs, consolidated net after financing/fees/hedges/expected losses, HF / liquidation distance, and what next leg is proposed or vetoed. Today's status JSON may not yet list `legs`; reconstruct from balance-sheet, strategy, sim, risk, paper, and execution output.
 
 Example shape (`pnpm sb status --json`):
 
@@ -79,9 +82,9 @@ Rules: [`docs/risk-governor.md`](docs/risk-governor.md). The CLI recomputes stat
 - `Caution`: stop increasing leverage; prefer reserves. Not a veto, still `noDeployment: true`.
 - There is no override flag. Loosening limits is a signed, time-locked human configuration change, not an agent action.
 
-## No-deployment
+## No-deployment (empty productive stack)
 
-`noDeployment: true` and/or `recommendedAction: "hold_liquid"` means: **preserve capital in liquid form**. No available strategy cleared the configurable hurdle (default 10% annualized **net**, not a promised return). Do not open loops, hedges, or LP positions. Do not “try a small size anyway.”
+`noDeployment: true` and/or `recommendedAction: "hold_liquid"` means the stack has **only the reserve/cash leg**. No additional leg cleared the configurable hurdle (default 10% annualized **net**, not a promised return). Do not open loops, hedges, or LP positions. Do not “try a small size anyway.” Hold-liquid is not a competing product identity; it is the stopping rule.
 
 `recommendedAction` values: `hold_liquid` | `operate_paper` | `add_reserves` | `deleverage` | `unwind`.
 
@@ -112,6 +115,7 @@ Assisted execution lives in `@shadow-banking/execution` (`pnpm execution`, `pnpm
 | File                                                               | Why you open it                          |
 | ------------------------------------------------------------------ | ---------------------------------------- |
 | [`docs/spec.md`](docs/spec.md)                                     | Product spec                             |
+| [`docs/multi-use-stacks.md`](docs/multi-use-stacks.md)             | Legs, consolidated net, hold-liquid      |
 | [`docs/architecture.md`](docs/architecture.md)                     | Components and trust boundaries          |
 | [`docs/risk-governor.md`](docs/risk-governor.md)                   | Limits, states, veto, unwind             |
 | [`docs/economics-1k.md`](docs/economics-1k.md)                     | Why $1k currently fails the hurdle       |
