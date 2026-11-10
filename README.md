@@ -86,18 +86,18 @@ This is **not** a trading bot, a robo-advisor, a portfolio tracker, or a yield a
 
 The platform is built as ten modular services. Each has a placeholder in [`services/`](services/).
 
-| Module                     | Directory                                                         | Responsibility                                                                                           |
-| -------------------------- | ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| Account & disclosure layer | [`services/account-disclosure`](services/account-disclosure/)     | Ingests financial data, user constraints, and available balances. Read-only by default.                  |
-| Balance-sheet engine       | [`services/balance-sheet-engine`](services/balance-sheet-engine/) | Reconciles assets, liabilities, equity, collateral, and available borrowing capacity.                    |
-| Opportunity engine         | [`services/opportunity-engine`](services/opportunity-engine/)     | Collects current yield, borrowing, funding, liquidity, and risk data.                                    |
-| Strategy engine            | [`services/strategy-engine`](services/strategy-engine/)           | Composes a simultaneous multi-use stack; single-strategy models are diagnostics for candidate legs.      |
-| Risk governor              | [`services/risk-governor`](services/risk-governor/)               | Enforces hard limits and controls emergency actions. Has authority over strategy and execution.          |
-| Execution layer            | [`services/execution-layer`](services/execution-layer/)           | Submits approved transactions, repayments, withdrawals, and hedges via official APIs/SDKs.               |
-| Accounting engine          | [`services/accounting-engine`](services/accounting-engine/)       | Maintains the ledger and calculates NAV and net performance.                                             |
-| Portfolio controller       | [`services/portfolio-controller`](services/portfolio-controller/) | Determines allocations, reserves, debt repayment, and compounding.                                       |
-| User interface             | [`services/user-interface`](services/user-interface/)             | Shows the balance sheet, yield sources, debt, risk, performance, and proposed actions.                   |
-| Audit & monitoring layer   | [`services/audit-monitoring`](services/audit-monitoring/)         | Records decisions, transactions, data sources, failures, and risk interventions.                         |
+| Module                     | Directory                                                         | Responsibility                                                                                      |
+| -------------------------- | ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| Account & disclosure layer | [`services/account-disclosure`](services/account-disclosure/)     | Ingests financial data, user constraints, and available balances. Read-only by default.             |
+| Balance-sheet engine       | [`services/balance-sheet-engine`](services/balance-sheet-engine/) | Reconciles assets, liabilities, equity, collateral, and available borrowing capacity.               |
+| Opportunity engine         | [`services/opportunity-engine`](services/opportunity-engine/)     | Collects current yield, borrowing, funding, liquidity, and risk data.                               |
+| Strategy engine            | [`services/strategy-engine`](services/strategy-engine/)           | Composes a simultaneous multi-use stack; single-strategy models are diagnostics for candidate legs. |
+| Risk governor              | [`services/risk-governor`](services/risk-governor/)               | Enforces hard limits and controls emergency actions. Has authority over strategy and execution.     |
+| Execution layer            | [`services/execution-layer`](services/execution-layer/)           | Submits approved transactions, repayments, withdrawals, and hedges via official APIs/SDKs.          |
+| Accounting engine          | [`services/accounting-engine`](services/accounting-engine/)       | Maintains the ledger and calculates NAV and net performance.                                        |
+| Portfolio controller       | [`services/portfolio-controller`](services/portfolio-controller/) | Determines allocations, reserves, debt repayment, and compounding.                                  |
+| User interface             | [`services/user-interface`](services/user-interface/)             | Shows the balance sheet, yield sources, debt, risk, performance, and proposed actions.              |
+| Audit & monitoring layer   | [`services/audit-monitoring`](services/audit-monitoring/)         | Records decisions, transactions, data sources, failures, and risk interventions.                    |
 
 Workspaces alongside the services:
 
