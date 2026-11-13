@@ -1,0 +1,271 @@
+:root {
+  --ink: #0e110e;
+  --ink-2: #161b16;
+  --panel: #1c231c;
+  --line: #2c3828;
+  --brass: #c4a36a;
+  --brass-dim: #8a7048;
+  --paper: #e8e2d4;
+  --muted: #9aa392;
+  --ok: #8fbf88;
+  --warn: #d4b45a;
+  --stop: #c46b5a;
+  --sample: #6b9cbf;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background: radial-gradient(1200px 600px at 10% -10%, #243024 0%, var(--ink) 42%);
+  color: var(--paper);
+  font-family: 'Iowan Old Style', Palatino, 'Palatino Linotype', 'Times New Roman', serif;
+}
+
+body {
+  letter-spacing: 0.01em;
+}
+
+a {
+  color: var(--brass);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+.shell {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 28px 24px 64px;
+}
+
+.masthead {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 24px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 18px;
+}
+
+.brand {
+  font-variant: small-caps;
+  letter-spacing: 0.22em;
+  font-size: 1.55rem;
+  color: var(--paper);
+  margin: 0;
+}
+
+.brand span {
+  display: block;
+  font-variant: normal;
+  letter-spacing: 0.04em;
+  font-size: 0.72rem;
+  color: var(--muted);
+  margin-top: 6px;
+}
+
+.nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 18px;
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.nav a[aria-current='page'] {
+  color: var(--paper);
+  border-bottom: 1px solid var(--brass);
+}
+
+.ribbons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 16px 0 28px;
+}
+
+.ribbon {
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 1px solid var(--line);
+  padding: 6px 10px;
+  color: var(--muted);
+}
+
+.ribbon.sample {
+  color: var(--sample);
+  border-color: #2a4154;
+}
+
+.ribbon.warn {
+  color: var(--warn);
+}
+
+.ribbon.stop {
+  color: var(--stop);
+}
+
+h1 {
+  font-size: 1.35rem;
+  font-weight: 600;
+  margin: 0 0 8px;
+}
+
+.lede {
+  color: var(--muted);
+  margin: 0 0 28px;
+  max-width: 62ch;
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.metric {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  padding: 14px 14px 12px;
+}
+
+.metric .k {
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.metric .v {
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 1.15rem;
+  margin-top: 8px;
+  color: var(--brass);
+}
+
+.panel {
+  background: var(--ink-2);
+  border: 1px solid var(--line);
+  padding: 18px 18px 8px;
+  margin-bottom: 22px;
+}
+
+.panel h2 {
+  font-size: 0.95rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--brass-dim);
+  margin: 0 0 12px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 0.78rem;
+  margin-bottom: 12px;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 8px 8px 8px 0;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+
+th {
+  color: var(--muted);
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: 0.65rem;
+}
+
+.note {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 12px 0 18px;
+}
+
+button,
+.btn,
+input,
+select {
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 0.8rem;
+}
+
+button,
+.btn {
+  background: transparent;
+  color: var(--paper);
+  border: 1px solid var(--brass-dim);
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+button:hover,
+.btn:hover {
+  border-color: var(--brass);
+  color: var(--brass);
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+input,
+select {
+  background: var(--ink);
+  color: var(--paper);
+  border: 1px solid var(--line);
+  padding: 8px 10px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.empty {
+  color: var(--muted);
+  font-style: italic;
+}
+
+.status-ok {
+  color: var(--ok);
+}
+
+.status-stop {
+  color: var(--stop);
+}
+
+.status-warn {
+  color: var(--warn);
+}

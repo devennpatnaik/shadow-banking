@@ -4,7 +4,7 @@ An AI-managed personal shadow-banking platform: software that puts **one dollar 
 
 The product is a **simultaneous multi-use stack** (yield-bearing asset, collateral, borrow, redeploy, optional hedge, plus a reserve that is not double-counted as productive), not a picker among mutually exclusive strategies. See [`docs/multi-use-stacks.md`](docs/multi-use-stacks.md).
 
-> **Status:** TypeScript/pnpm monorepo with a consolidated balance-sheet model (`packages/core`), recursive borrowing simulator (`simulator/`), strategy economics engine (`packages/strategy`), opportunity engine (`packages/opportunity`), accounting ledger (`packages/accounting`), risk governor (`packages/risk`), paper portfolio controller (`packages/controller`), Phase 5 assisted execution (`packages/execution`), and an LLM-facing terminal CLI (`packages/cli`). See [Getting started](#getting-started). No web UI.
+> **Status:** TypeScript/pnpm monorepo with a consolidated balance-sheet model (`packages/core`), recursive borrowing simulator (`simulator/`), strategy economics engine (`packages/strategy`), opportunity engine (`packages/opportunity`), accounting ledger (`packages/accounting`), risk governor (`packages/risk`), paper portfolio controller (`packages/controller`), Phase 5 assisted execution (`packages/execution`), an LLM-facing terminal CLI (`packages/cli`), and a private Cursor paper-book web app (`apps/web`). See [Getting started](#getting-started). The CLI remains the agent interface; the web app is propose/approve only (no broadcast).
 
 The full product specification lives in [`docs/spec.md`](docs/spec.md). Multi-use stacks: [`docs/multi-use-stacks.md`](docs/multi-use-stacks.md).
 
@@ -14,7 +14,7 @@ The full product specification lives in [`docs/spec.md`](docs/spec.md). Multi-us
 
 Stack: **TypeScript**, Node 20+ LTS, **pnpm** workspaces, strict TypeScript, **vitest**, **decimal.js** for every balance and rate. One language across the engines, the agent CLI, and the Aave / Hyperliquid SDK ecosystems. Floating point is never used for money.
 
-The operator interface is a **text CLI for Claude Code and other agents** (`pnpm sb`). There is no web or graphical dashboard.
+The operator interface for agents is a **text CLI** (`pnpm sb`). Humans can also open the private paper book at [`apps/web`](apps/web/) (Cursor publish-app; signed-in; Postgres).
 
 ```bash
 corepack enable
@@ -51,6 +51,7 @@ Read [`AGENTS.md`](AGENTS.md) (and [`.claude/CLAUDE.md`](.claude/CLAUDE.md)) bef
 - [`packages/risk`](packages/risk/) — risk governor runtime (states, hysteresis, hard-limit veto). `pnpm risk state` / `pnpm risk evaluate`; also used by `pnpm sb risk` and `pnpm sb status`.
 - [`packages/controller`](packages/controller/) — Phase 4 paper portfolio loop (snapshot → strategies → veto → hypothetical ledger). `pnpm paper run`; also `pnpm sb paper`.
 - [`packages/execution`](packages/execution/) — Phase 5 assisted execution (`propose` / `show` / `approve` / `reject`). Broadcast refused. Mock simulator offline; optional `EXECUTION_RPC_URL`.
+- [`apps/web`](apps/web/) — Next.js paper book for Cursor `publish-app` (private, Postgres, PGlite locally). See [Web paper book](#web-paper-book-appsweb).
 
 CI (`.github/workflows/ci.yml`) runs typecheck, lint, format check, tests, and simulator/strategy/opportunity/accounting/CLI smoke runs on Node 20 and 22.
 
@@ -108,8 +109,9 @@ Workspaces alongside the services:
 - [`packages/accounting`](packages/accounting/) — ledger and performance report (spec §14.7). Text CLI; no web UI.
 - [`packages/risk`](packages/risk/) — risk governor (spec §7 / §14.8). Paper/read-only CLI.
 - [`packages/controller`](packages/controller/) — paper portfolio controller (spec §13 Phase 4).
-- [`packages/cli`](packages/cli/) — agent-facing terminal interface (replaces a live-data dashboard). Paper/read-only.
-- [`dashboard/`](dashboard/) — placeholder; live output is CLI/structured text, not a graphical dashboard.
+- [`packages/cli`](packages/cli/) — agent-facing terminal interface. Paper/read-only.
+- [`apps/web`](apps/web/) — private signed-in paper book (Cursor app). Not live execution.
+- [`dashboard/`](dashboard/) — retired placeholder; agents still use `pnpm sb`.
 
 ---
 
@@ -189,7 +191,7 @@ The risk governor is designed to prioritize survival over yield and to reject or
 │   ├── accounting/          # ledger + performance CLI
 │   ├── risk/                # risk governor runtime + veto CLI
 │   ├── controller/          # Phase 4 paper portfolio controller
-│   └── cli/                 # LLM-facing CLI (no web UI)
+│   └── cli/                 # LLM-facing CLI
 ├── services/
 │   ├── account-disclosure/
 │   ├── balance-sheet-engine/
@@ -202,7 +204,22 @@ The risk governor is designed to prioritize survival over yield and to reject or
 │   ├── user-interface/
 │   └── audit-monitoring/
 ├── simulator/
-└── dashboard/               # retired as a deliverable; see packages/cli
+├── apps/web/                # Cursor publish-app paper book (private, Postgres)
+└── dashboard/               # retired placeholder; see packages/cli and apps/web
 ```
+
+## Web paper book (`apps/web`)
+
+Private signed-in Next.js app (App Router) for the same engines. Market rows are **fixture sample** data unless a later snapshot is stored. Phase 5: propose + approve/reject only — **never broadcast**, never hold signing keys.
+
+```bash
+# from repo root; unset DATABASE_URL so local runs use in-memory PGlite
+corepack enable
+pnpm install
+env -u DATABASE_URL pnpm --filter @shadow-banking/web dev
+# open http://127.0.0.1:3000  (Book + Stack pages)
+```
+
+`cursor-app.json` declares Postgres. Local/CI builds skip migrate when `DATABASE_URL` is unset (`scripts/migrate.mjs`). Viewer rows are keyed by `identity.sub` after `add-app-identity` (do not hand-write `cursor/identity.ts`). Pick **private** visibility when confirming publish. Do not invent `DATABASE_URL`.
 
 No license has been chosen yet.

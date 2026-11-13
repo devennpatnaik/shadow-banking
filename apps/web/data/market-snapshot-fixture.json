@@ -1,0 +1,528 @@
+{
+  "schemaVersion": 1,
+  "snapshotDate": "2026-10-21",
+  "currency": "USD",
+  "hurdle": 0.1,
+  "conventions": {
+    "rates": "All rates are decimals per year (0.0222 = 2.22% APY/APR as published by the source; APR vs APY is noted in `notes` where the source distinguishes).",
+    "asOf": "ISO-8601 UTC timestamp or date of the source reading. Readings are point-in-time and will drift; re-snapshot before relying on them.",
+    "nulls": "null means the value was not captured in this snapshot, not that it is zero.",
+    "gasUsd": "gasUnits x gasPriceGwei(planning) x 1e-9 x ethPriceUsd. `planning` is a deliberately conservative gas price (about the 30-day average), not the live spot price.",
+    "liquidation": "Protocol-level liquidation mechanics that are not per-market parameters (close factor, position-size thresholds, dust rules) live under costs.liquidation.<protocol>. Per-market liquidationThreshold / liquidationBonus stay in markets[]. Borrower loss on a liquidation = liquidationBonus x debt repaid."
+  },
+  "assets": [
+    {
+      "symbol": "ETH",
+      "network": "ethereum",
+      "priceUsd": 2445.37,
+      "yieldApy": 0.0,
+      "source": "https://etherscan.io/gastracker (ETH price banner); cross-checked https://tindex.app/en/indicators/Cryptocurrency/ETH/ (2,445) and CoinGecko via https://www.marketalleys.com/post/ether-up-2-20-to-2-451-43-neutral-trend-and-rsi-37-8-2026-10-21 (2,451.43)",
+      "asOf": "2026-10-21T05:00:00Z",
+      "notes": "Unstaked ETH earns nothing. Used as the numeraire for gas and position sizing."
+    },
+    {
+      "symbol": "stETH",
+      "network": "ethereum",
+      "priceUsd": 2445.37,
+      "yieldApy": 0.0222,
+      "source": "https://lido.fi/how-lido-works/apr-and-rewards-calculator (2.22% 7-day APR); https://chartegy.com/data/series/LIDO_STAKING_RATE (2.24% on 2026-10-20, after Lido's 10% fee)",
+      "asOf": "2026-10-21",
+      "notes": "Rebasing token; 30-day mean 2.24%. Yield is net of Lido's 10% protocol fee. Assumed to trade at parity with ETH for this snapshot."
+    },
+    {
+      "symbol": "wstETH",
+      "network": "ethereum",
+      "priceUsd": 3034.78,
+      "yieldApy": 0.0222,
+      "source": "Price: Aave oracle via https://aavescan.com/ethereum-v3/wsteth ($3,034.78 at ETH $2,445.42). Yield: same as stETH (wstETH is non-rebasing stETH; value accrues in the exchange rate).",
+      "asOf": "2026-10-21",
+      "notes": "1 wstETH = ~1.241 stETH on this reading. Also bridged to Arbitrum and Base (same yield, same oracle basis on Aave)."
+    },
+    {
+      "symbol": "rETH",
+      "network": "ethereum",
+      "priceUsd": 2871.12,
+      "yieldApy": 0.0189,
+      "source": "Yield: https://rocketpool.net/liquid-staking/what-can-i-earn (1.89% 7-day APR, net of ~14% node-operator commission). Price: Aave oracle via https://defiexplore.com/aavev3/markets/core",
+      "asOf": "2026-10-20",
+      "notes": "October 1-20 average 2.06% per https://growyourethereum.com/data/ethereum-staking-apr-history. rETH is frozen on Aave Arbitrum; small market on Ethereum Core ($97M supplied)."
+    },
+    {
+      "symbol": "cbETH",
+      "network": "base",
+      "priceUsd": 2792.7,
+      "yieldApy": 0.0232,
+      "source": "Yield: https://www.coinbase.com/earn/staking/coinbase-wrapped-staked-eth (2.32% est. APY); DefiLlama shows 2.29% (https://defillama.com/protocol/coinbase-wrapped-staked-eth). Price: Aave oracle via https://defiexplore.com/aavev3/markets/core",
+      "asOf": "2026-10-21",
+      "notes": "Net of Coinbase's 10% cbETH commission. Largest ETH-LST market on Aave Base ($152.7M supplied)."
+    },
+    {
+      "symbol": "jitoSOL",
+      "network": "solana",
+      "priceUsd": null,
+      "yieldApy": 0.0448,
+      "source": "https://www.defi.garden/pools/jito-liquid-staking-jitosol-solana (DefiLlama feed: 4.48% live, 4.78% 30-day mean); https://bitcoinyield.co/assets/sol (4.70% on 2026-10-21 03:01 UTC)",
+      "asOf": "2026-10-21T03:01:00Z",
+      "notes": "Optional second ecosystem for the simulator. Staking + MEV rewards. Not integrated with Aave; Solana lending venues (Kamino, Jupiter Lend) would be needed for a loop. Price not captured."
+    },
+    {
+      "symbol": "SOL",
+      "network": "solana",
+      "priceUsd": 105.82,
+      "yieldApy": 0.0,
+      "source": "https://metamask.io/price/solana; https://www.kraken.com/prices/solana (106.12)",
+      "asOf": "2026-10-21",
+      "notes": "Reference only, for sizing jitoSOL."
+    },
+    {
+      "symbol": "USDC",
+      "network": "base",
+      "priceUsd": 1.0,
+      "yieldApy": 0.0386,
+      "source": "Aave V3 Base USDC supply APY via https://aavetracker.com/markets/base/ (updated 2026-10-21 04:16 UTC)",
+      "asOf": "2026-10-21T04:16:00Z",
+      "notes": "Represents the 'preserve capital in liquid form' option. Ethereum Core USDC supply 3.23% (https://app.aave.com/markets/?marketName=proto_mainnet_v3), Arbitrum 2.32% (https://aavetracker.com/markets/arbitrum/), sGHO 4.25%, Coinbase One USDC rewards 3.5% (custodial)."
+    }
+  ],
+  "markets": [
+    {
+      "protocol": "aave-v3-core",
+      "network": "ethereum",
+      "asset": "WETH",
+      "supplyApy": 0.0132,
+      "borrowApy": 0.0196,
+      "ltv": 0.805,
+      "liquidationThreshold": 0.83,
+      "liquidationBonus": 0.05,
+      "eMode": {
+        "category": "ETH correlated (id 1)",
+        "ltv": 0.93,
+        "liquidationThreshold": 0.95,
+        "liquidationBonus": 0.01,
+        "collateral": true,
+        "borrowable": true
+      },
+      "source": "https://aavetracker.com/markets/ethereum/weth/ (updated 2026-10-21 02:00 UTC); averages from https://aavescan.com/ethereum-v3/weth",
+      "asOf": "2026-10-21T02:00:00Z",
+      "notes": "Borrow APR 1.94% on 2026-10-20 (Chartegy). Trailing averages of borrow APR: 7d 1.96%, 30d 2.00%, 6m 2.26%, 1y 2.32%. Spiked to 4.61% on 2026-05-01. Utilization 81.3%; Uoptimal 92%, slope1 2.20%, reserve factor 15%."
+    },
+    {
+      "protocol": "aave-v3-core",
+      "network": "ethereum",
+      "asset": "wstETH",
+      "supplyApy": 0.0,
+      "borrowApy": 0.0003,
+      "ltv": 0.785,
+      "liquidationThreshold": 0.81,
+      "liquidationBonus": 0.06,
+      "eMode": {
+        "category": "ETH correlated (id 1)",
+        "ltv": 0.93,
+        "liquidationThreshold": 0.95,
+        "liquidationBonus": 0.01,
+        "collateral": true,
+        "borrowable": false
+      },
+      "source": "https://aavetracker.com/markets/ethereum/wsteth/ (updated 2026-10-21 05:18 UTC); E-mode confirmed at https://dash.tools.aave.com/reserve/1-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2-aave-v3/",
+      "asOf": "2026-10-21T05:18:00Z",
+      "notes": "Aave's displayed supply APY excludes the intrinsic 2.22% staking yield. Borrowing wstETH is switched off. $2.36B supplied, supply cap 82% used. Liquid E-mode on the Prime instance offers 95% LTV / 96.5% LT (not used here)."
+    },
+    {
+      "protocol": "aave-v3-core",
+      "network": "ethereum",
+      "asset": "USDC",
+      "supplyApy": 0.0323,
+      "borrowApy": 0.04,
+      "ltv": null,
+      "liquidationThreshold": null,
+      "liquidationBonus": null,
+      "eMode": null,
+      "source": "https://app.aave.com/markets/?marketName=proto_mainnet_v3",
+      "asOf": "2026-10-21",
+      "notes": "Liquid-reserve option on mainnet."
+    },
+    {
+      "protocol": "aave-v3",
+      "network": "arbitrum",
+      "asset": "WETH",
+      "supplyApy": 0.0094,
+      "borrowApy": 0.0197,
+      "ltv": 0.8,
+      "liquidationThreshold": 0.84,
+      "liquidationBonus": 0.05,
+      "eMode": {
+        "category": "ETH correlated",
+        "ltv": 0.93,
+        "liquidationThreshold": 0.95,
+        "liquidationBonus": 0.01,
+        "collateral": true,
+        "borrowable": true
+      },
+      "source": "https://aavetracker.com/markets/arbitrum/weth/ (updated 2026-10-21 02:53 UTC)",
+      "asOf": "2026-10-21T02:53:00Z",
+      "notes": "30-day borrow range 1.97%-2.15%. Utilization 81.5%; $30.8M available to borrow."
+    },
+    {
+      "protocol": "aave-v3",
+      "network": "arbitrum",
+      "asset": "wstETH",
+      "supplyApy": 0.0,
+      "borrowApy": 0.0,
+      "ltv": 0.75,
+      "liquidationThreshold": 0.79,
+      "liquidationBonus": 0.072,
+      "eMode": {
+        "category": "wstETH/WETH ETH Correlated (liquid E-mode)",
+        "ltv": 0.94,
+        "liquidationThreshold": 0.96,
+        "liquidationBonus": 0.01,
+        "collateral": true,
+        "borrowable": false
+      },
+      "source": "https://aavetracker.com/markets/arbitrum/wsteth/ (updated 2026-10-21 05:18 UTC)",
+      "asOf": "2026-10-21T05:18:00Z",
+      "notes": "Legacy 'ETH correlated' E-mode is 93/95/1. $59.0M supplied, cap 57% used. Intrinsic yield 2.22% (DefiLlama aArbwstETH shows 2.24% total)."
+    },
+    {
+      "protocol": "aave-v3",
+      "network": "arbitrum",
+      "asset": "USDC",
+      "supplyApy": 0.0232,
+      "borrowApy": 0.0342,
+      "ltv": null,
+      "liquidationThreshold": null,
+      "liquidationBonus": null,
+      "eMode": null,
+      "source": "https://aavetracker.com/markets/arbitrum/ (updated 2026-10-21 03:54 UTC)",
+      "asOf": "2026-10-21T03:54:00Z",
+      "notes": "Liquid-reserve option on Arbitrum (also the chain Hyperliquid deposits come from)."
+    },
+    {
+      "protocol": "aave-v3",
+      "network": "base",
+      "asset": "WETH",
+      "supplyApy": 0.0141,
+      "borrowApy": 0.0205,
+      "ltv": null,
+      "liquidationThreshold": null,
+      "liquidationBonus": null,
+      "eMode": {
+        "category": "cbETH/WETH and wstETH/WETH liquid E-modes (WETH is the borrowable leg)",
+        "ltv": 0.93,
+        "liquidationThreshold": 0.95,
+        "liquidationBonus": 0.02,
+        "collateral": false,
+        "borrowable": true
+      },
+      "source": "https://aavetracker.com/markets/base/ (updated 2026-10-21 04:16 UTC); averages from https://aavescan.com/base-v3/weth",
+      "asOf": "2026-10-21T04:16:00Z",
+      "notes": "Borrow APR 30d avg 2.04%, 6m 2.30%. Merkl incentive on WETH supply (+2.14% in USDC for 'Jumper bridgers') is excluded from base-case economics. Aave Risk Stewards (Sep 2026) judged the wstETH loop on Base negative-carry at a 2.29% borrow rate."
+    },
+    {
+      "protocol": "aave-v3",
+      "network": "base",
+      "asset": "wstETH",
+      "supplyApy": 0.0,
+      "borrowApy": 0.0002,
+      "ltv": 0.75,
+      "liquidationThreshold": 0.79,
+      "liquidationBonus": 0.06,
+      "eMode": {
+        "category": "wstETH/WETH (liquid E-mode)",
+        "ltv": 0.93,
+        "liquidationThreshold": 0.95,
+        "liquidationBonus": 0.02,
+        "collateral": true,
+        "borrowable": false
+      },
+      "source": "https://aavetracker.com/markets/base/wsteth/ (updated 2026-10-20 23:23 UTC); E-mode parameters per https://governance.aave.com/t/arfc-lrt-and-wsteth-unification/21739",
+      "asOf": "2026-10-20T23:23:00Z",
+      "notes": "$25.7M supplied, cap 56% used. On-chain wstETH/WETH swap depth on Base is thin on Uniswap ($95K) but Aerodrome Slipstream 0.009% has $4.4M."
+    },
+    {
+      "protocol": "aave-v3",
+      "network": "base",
+      "asset": "cbETH",
+      "supplyApy": 0.0,
+      "borrowApy": 0.0006,
+      "ltv": 0.75,
+      "liquidationThreshold": 0.79,
+      "liquidationBonus": 0.075,
+      "eMode": {
+        "category": "cbETH/WETH (liquid E-mode)",
+        "ltv": 0.93,
+        "liquidationThreshold": 0.95,
+        "liquidationBonus": 0.02,
+        "collateral": true,
+        "borrowable": false
+      },
+      "source": "https://aavetracker.com/markets/base/cbeth/ (updated 2026-10-21 05:18 UTC)",
+      "asOf": "2026-10-21T05:18:00Z",
+      "notes": "Legacy 'ETH correlated' E-mode is 90/93/2. $152.7M supplied, cap 91% used. Intrinsic yield 2.32%."
+    },
+    {
+      "protocol": "aave-v3",
+      "network": "base",
+      "asset": "USDC",
+      "supplyApy": 0.0386,
+      "borrowApy": 0.0483,
+      "ltv": null,
+      "liquidationThreshold": null,
+      "liquidationBonus": null,
+      "eMode": null,
+      "source": "https://aavetracker.com/markets/base/ (updated 2026-10-21 04:16 UTC)",
+      "asOf": "2026-10-21T04:16:00Z",
+      "notes": "Highest USDC supply rate of the three Aave markets in this snapshot."
+    }
+  ],
+  "costs": {
+    "gas": {
+      "ethereum": {
+        "ethPriceUsd": 2445.37,
+        "gasPriceGwei": {
+          "spot": 0.039,
+          "avg24h": 0.224,
+          "avg7d": 0.147,
+          "avg30d": 0.373,
+          "ytd2026Typical": 0.29,
+          "worstDayLast30dAvg": 0.94,
+          "worstIntradayLast30d": 12.3,
+          "planning": 0.4,
+          "stress3x": 1.2
+        },
+        "source": "https://etherscan.io/gastracker (0.039 gwei, 2026-10-21 ~05:00 UTC); https://logicencoder.com/ethereum-gas-price-history/ (24h/7d/30d averages, 2026-10-21 04:15 UTC); https://gasnow.tools/gas-history/ethereum.html (daily avg/peak, Oct 2-17); https://growyourethereum.com/data/ethereum-gas-price-history (2026 YTD 0.29 gwei)",
+        "actions": {
+          "approve": { "gasUnits": 46000, "usdAtPlanning": 0.045, "usdAtSpot": 0.004 },
+          "supply": { "gasUnits": 220000, "usdAtPlanning": 0.215, "usdAtSpot": 0.021 },
+          "borrow": { "gasUnits": 240000, "usdAtPlanning": 0.235, "usdAtSpot": 0.023 },
+          "repay": { "gasUnits": 130000, "usdAtPlanning": 0.127, "usdAtSpot": 0.012 },
+          "withdraw": { "gasUnits": 200000, "usdAtPlanning": 0.196, "usdAtSpot": 0.019 },
+          "swap": { "gasUnits": 180000, "usdAtPlanning": 0.176, "usdAtSpot": 0.017 },
+          "setEMode": { "gasUnits": 60000, "usdAtPlanning": 0.059, "usdAtSpot": 0.006 },
+          "stakeLidoToWstETH": { "gasUnits": 130000, "usdAtPlanning": 0.127, "usdAtSpot": 0.012 },
+          "bridgeOutToL2": { "gasUnits": 110000, "usdAtPlanning": 0.108, "usdAtSpot": 0.01 }
+        },
+        "actionsSource": "Aave v3.2 gas report (borrow avg 236,273; deposit avg 215,439; repay avg 129,404) https://github.com/aave-dao/aave-v3-origin/blob/v3.2.0/docs/3.2/3.1_3.2_gas-diff.md; approve/swap/bridge units from https://chaingate.dev/gas-tracker/ethereum and https://gasnow.tools/cost/stake-eth-lido.html (Lido submit ~85,000; wrap adds ~45,000). withdraw and setEMode are estimates.",
+        "notes": "At planning gas (0.40 gwei) a full approve+supply+eMode+borrow+swap+supply loop turn costs about $0.90. Fat tail: on 2026-10-08 intraday gas hit 12.3 gwei, i.e. ~30x planning, so a single action could briefly cost $6-7. Mainnet is no longer a structural blocker at $1,000, but it is the only venue in this snapshot with a meaningful gas tail."
+      },
+      "arbitrum": {
+        "gasPriceGwei": { "spot": 0.02, "planning": 0.02 },
+        "source": "https://l2gastracker.com/stats (2026-10-14 snapshot and receipt ranges); https://l2gastracker.com/blog/aave-fees-on-base-arbitrum; https://openchainbench.com/compare/arbitrum-vs-base (native transfer $0.00103, 2026-10-20)",
+        "actions": {
+          "approve": { "usdAtPlanning": 0.02, "observedRange": [0.005, 0.2] },
+          "supply": { "usdAtPlanning": 0.05, "observedRange": [0.01, 0.25] },
+          "borrow": { "usdAtPlanning": 0.05, "observedRange": [0.01, 0.35] },
+          "repay": { "usdAtPlanning": 0.05, "observedRange": [0.01, 0.3] },
+          "withdraw": { "usdAtPlanning": 0.05, "observedRange": [0.01, 0.3] },
+          "swap": { "usdAtPlanning": 0.01, "observedRange": [0.003, 0.008] },
+          "hyperliquidBridgeDeposit": { "usdAtPlanning": 0.01, "observedRange": [0.001, 0.01] }
+        },
+        "notes": "L2 fees include an L1 data component that rises 3-10x during mainnet congestion; still sub-dollar. Planning values are deliberately above current receipts."
+      },
+      "base": {
+        "gasPriceGwei": { "spot": 0.005, "planning": 0.005 },
+        "source": "https://l2gastracker.com/stats; https://openchainbench.com/compare/arbitrum-vs-base (native transfer $0.000313, 2026-10-20)",
+        "actions": {
+          "approve": { "usdAtPlanning": 0.01, "observedRange": [0.001, 0.1] },
+          "supply": { "usdAtPlanning": 0.03, "observedRange": [0.005, 0.25] },
+          "borrow": { "usdAtPlanning": 0.03, "observedRange": [0.005, 0.35] },
+          "repay": { "usdAtPlanning": 0.03, "observedRange": [0.005, 0.3] },
+          "withdraw": { "usdAtPlanning": 0.03, "observedRange": [0.005, 0.3] },
+          "swap": { "usdAtPlanning": 0.005, "observedRange": [0.002, 0.005] }
+        },
+        "notes": "Cheapest of the three. Coinbase withdraws USDC to Base for free, which makes Base the lowest-friction entry point."
+      }
+    },
+    "swap": {
+      "wstETH/ETH": {
+        "feeRate": 0.0001,
+        "priceImpactAt100": 0.00005,
+        "priceImpactAt1000": 0.0002,
+        "venues": {
+          "ethereum": "Uniswap v3 0.01% pool ~$6.4-6.6M TVL; ~1.19K wstETH tradeable within 0.10% slippage (https://dexrabbit.bitquery.io/eth/pool/0x109830a1aaad605bbf02a9dfa7b0b92ec2fb7daa). Curve pool fee ~0.04%. Lido direct mint (ETH -> wstETH via WstETH contract) has zero fee and zero slippage.",
+          "arbitrum": "Uniswap v3 0.01% pool ~$875K TVL; ~306 wstETH within 0.10% slippage (https://dexrabbit.bitquery.io/arbitrum/pool/0x35218a1cbac5bbc3e57fd9bd38219d37571b3537).",
+          "base": "Uniswap v3 0.01% pool only ~$95K (thin); Aerodrome Slipstream 0.009% pool $4.4M TVL (https://lpsignal.app/pairs/WETH-wstETH)."
+        },
+        "source": "Pool depth pages above; LPSignal pair page as of 2026-10-15",
+        "asOf": "2026-10-21",
+        "notes": "At $100-$1,000 the pool fee dominates; price impact is a few basis points on Ethereum/Arbitrum. Exiting via the Lido withdrawal queue instead of a DEX costs no fee but takes ~1-5 days."
+      },
+      "USDC/ETH": {
+        "feeRate": 0.0005,
+        "priceImpactAt100": 0.00005,
+        "priceImpactAt1000": 0.0002,
+        "source": "Uniswap v3 0.05% tier is the standard deep USDC/WETH pool on Ethereum, Arbitrum and Base (https://cryptorbix.com/en/b/uniswap-vs-curve-which-dex); impact at $1,000 is negligible on all three.",
+        "asOf": "2026-10-21",
+        "notes": "Used for the USDC-based on/off-ramp path."
+      }
+    },
+    "bridging": {
+      "ethereumToL2": {
+        "protocolFeeRate": 0.0008,
+        "fixedUsd": 0.11,
+        "source": "Across relayer/LP fee ~0.06-0.10% plus source gas (https://themultimesh.com/blog/bridge-to-arbitrum); L1 gas for a bridge call ~110K units at planning gas (https://gasnow.tools/cost/stake-eth-lido.html)",
+        "asOf": "2026-10-21",
+        "notes": "Official Arbitrum/Base bridges have no protocol fee but take ~10-15 minutes in and ~7 days out."
+      },
+      "l2ToL2": {
+        "protocolFeeRate": 0.0008,
+        "fixedUsd": 0.01,
+        "source": "https://themultimesh.com/blog/bridge-to-arbitrum ($0.20-0.60 all-in on $500); https://l2gastracker.com/stats ($0.10-0.40 on ~$500)",
+        "asOf": "2026-10-21"
+      },
+      "l2ToEthereum": {
+        "protocolFeeRate": 0.001,
+        "fixedUsd": 0.02,
+        "source": "Across fast route; canonical bridge is free but has a 7-day exit",
+        "asOf": "2026-10-21"
+      },
+      "hyperliquid": {
+        "depositFeeUsd": 0.0,
+        "depositMinUsdc": 5,
+        "withdrawalFeeUsdc": 1.0,
+        "source": "https://hyperliquid.gitbook.io/Hyperliquid-docs/for-developers/api/usdc (5 USDC minimum; deposits below it are lost); https://hyperliquid-co.gitbook.io/wiki/architecture/hypercore/bridge (1 USDC withdrawal fee); https://docs.chainstack.com/reference/hyperliquid-exchange-withdraw",
+        "asOf": "2026-10-21",
+        "notes": "Deposits are native USDC from Arbitrum (or via Circle CCTP from other chains). Withdrawals land on Arbitrum in ~5 minutes."
+      }
+    },
+    "fiatRamp": {
+      "coinbase": {
+        "achDepositUsd": 0.0,
+        "achWithdrawalUsd": 0.0,
+        "wireDepositUsd": 10.0,
+        "wireWithdrawalUsd": 25.0,
+        "usdToUsdcConversionRate": 0.0,
+        "usdcWithdrawalToBaseUsd": 0.0,
+        "usdcWithdrawalToArbitrumUsd": 0.0,
+        "ethWithdrawalToBaseUsd": 0.05,
+        "ethWithdrawalToEthereumUsd": 0.5,
+        "advancedMakerRateUS": 0.005,
+        "advancedTakerRateUS": 0.009,
+        "advancedMakerRateEUUK": 0.0025,
+        "advancedTakerRateEUUK": 0.005,
+        "simpleBuyFeeRate": 0.01875,
+        "simpleBuySpread": "additional, shown in preview; not fixed",
+        "source": "https://www.coinbase.com/blog/were-lowering-fees-for-many-active-traders-on-coinbase-advanced (entry tier 0.50%/0.90% US from 2026-09-16); https://www.coinbase.com/advanced-vip (tier table); https://help.coinbase.com/en/coinbase/trading-and-funding/pricing-and-fees/fees (simple buy 1.875% + spread); https://help.coinbase.com/en/international-exchange/trading-deposits-withdrawals/network-fees (USDC withdrawals free); https://gasfeepredictor.com/coinbase-usdc-withdrawal-fee (USD->USDC 1:1, Base free); ACH/wire from Coinbase Exchange schedule via https://www.mexc.fm/learn/article/coinbase-fees-explained-is-your-1-000-buy-paying-4-or-28-75-/1 (verified 2026-09-07)",
+        "asOf": "2026-10-21",
+        "notes": "Two very different ramp costs exist: (a) USD -> USDC 1:1 (free) -> withdraw to Base (free) -> swap on-chain (~0.07%) costs about $1 per $1,000 each way; (b) buying ETH on Coinbase Advanced as a US taker costs $9 per $1,000 each way; (c) a simple app buy costs ~$19 + spread. The platform should use path (a)."
+      },
+      "kraken": {
+        "ethWithdrawalToBaseEth": 0.00015,
+        "achWithdrawalUsd": 0.0,
+        "source": "https://banksforcrypto.com/how-to/send-ethereum-us/ (Kraken fee table, verified 2026-06-02)",
+        "asOf": "2026-06-02",
+        "notes": "Secondary venue; not modelled."
+      }
+    },
+    "hyperliquid": {
+      "takerFeeRate": 0.00045,
+      "makerFeeRate": 0.00015,
+      "minOrderNotionalUsd": 10,
+      "minDepositUsdc": 5,
+      "withdrawalFeeUsdc": 1.0,
+      "ethMaxLeverage": 25,
+      "ethMaintenanceMarginRate": 0.02,
+      "fundingIntervalHours": 1,
+      "fundingBaselineApr": 0.1095,
+      "source": "Fees and tiers: https://hyperliquid.gitbook.io/hyperliquid-docs/trading/fees; min order: https://hyperliquid.gitbook.io/Hyperliquid-docs/for-developers/api/error-responses (MinTradeNtl $10); leverage/min deposit: https://cipher-intelligence.io/blog/dex-minimum-trade-size-comparison/ (2026-10-21)",
+      "asOf": "2026-10-21",
+      "funding": {
+        "ETH": {
+          "currentHourlyRate": 0.0000125,
+          "currentApr": 0.1095,
+          "avg7dApr": 0.0625,
+          "avg30dApr": 0.088,
+          "highestDayLast30dApr": 0.17,
+          "lowestDayLast30dApr": -0.015,
+          "negativeDaysLast30": 1,
+          "realizedSince2026-03-17Apr": 0.063,
+          "binanceEth2026YtdApr": 0.0157,
+          "binanceEth2021to2026MeanApr": 0.0786,
+          "binanceEth2022FullYearApr": 0.0079,
+          "typicalRangeApr": [-0.03, 0.15],
+          "planningApr": 0.05,
+          "stressApr": -0.03,
+          "source": "https://usekeel.io/lab/hyperliquid-data and https://usekeel.io/lab/funding-leaderboard (30d avg +8.8%, high +17.0%, low -1.5%, 2026-10-20); https://coinliqui.com/funding/eth (10.95% baseline; 3.77% paid over 5,200 settled hours since 2026-03-17 = ~6.3% APR); https://yieldo.me/funding/eth (7d); https://cryptocurrencyhistory.com/coins/eth/funding-rate-history/ (Binance by year); https://huggingface.co/datasets/Torch-Trade/ethusdt_perp_funding_8h_05_2021_to_02_2026 (Binance mean 7.86%)",
+          "asOf": "2026-10-21T03:17:00Z",
+          "notes": "Positive funding = longs pay shorts (good for a hedged-carry short). Hyperliquid's funding formula includes a 0.01%/8h interest baseline, so a balanced book still pays shorts ~10.95% APR; realised averages are lower because of negative hours. Hyperliquid has run ~7pp above Binance on the same contract (https://fluxy.io/blog/perp-funding-almanac-2020-2026)."
+        }
+      }
+    },
+    "liquidation": {
+      "aaveV3": {
+        "rule": "position-size-dependent close factor",
+        "protocolVersion": "introduced in Aave v3.3.0; unchanged in the current main-branch source (latest release v3.7.0, 2026-08-05)",
+        "activatedOnAllInstances": "2025-02-24",
+        "activatedBy": "Aave governance proposal 252, which upgraded every active Aave v3 instance (incl. Ethereum Core, Arbitrum, Base) from v3.2 to v3.3",
+        "appliesTo": ["ethereum", "arbitrum", "base"],
+        "defaultCloseFactor": 0.5,
+        "maxCloseFactor": 1.0,
+        "fullCloseIfHealthFactorAtOrBelow": 0.95,
+        "fullCloseIfReserveCollateralOrDebtBelowUsd": 2000,
+        "minLeftoverAfterPartialLiquidationUsd": 1000,
+        "borrowerLossOnLiquidation": "liquidationBonus x debt repaid, taken from collateral (the protocol's share of the bonus does not change the borrower's loss). With a 100% close factor the entire debt is repaid in one call, so loss = liquidationBonus x entire debt and the position is closed, not halved.",
+        "source": "https://github.com/aave-dao/aave-v3-origin/blob/main/src/contracts/protocol/libraries/logic/LiquidationLogic.sol (MIN_BASE_MAX_CLOSE_FACTOR_THRESHOLD = 2000e8, MIN_LEFTOVER_BASE = threshold / 2, CLOSE_FACTOR_HF_THRESHOLD = 0.95e18, DEFAULT_LIQUIDATION_CLOSE_FACTOR = 50%); https://github.com/aave-dao/aave-v3-origin/blob/main/docs/3.3/Aave-v3.3-features.md (sections 2.2 and 2.3); https://aave.com/help/borrowing/liquidations; activation: https://governance.aave.com/t/bgd-aave-v3-3-feat-umbrella/20129/7 and https://vote.onaave.com/proposal/?ipfsHash=0x13c4f9441574b90e2210e9ca94a8632ba9d997eca6af66283932d3131d642894&proposalId=252; version history: https://github.com/aave-dao/aave-v3-origin/releases",
+        "asOf": "2026-10-21",
+        "notes": "Thresholds are in the pool's base currency (USD, 8 decimals) and are evaluated per reserve being liquidated, so an ETH-denominated debt drops into the full-close regime when ETH's USD price falls. A partial liquidation may not leave less than $1,000 of debt or of collateral (tx reverts: MustNotLeaveDust), so for positions with debt <= $2,000 the only legal liquidation is a complete one. BGD's stated rationale: at a 1% bonus a $2,000 position yields a $20 liquidator reward, the floor for economic liquidation under average gas. Consequence for this project: every loop modelled at $1,000 equity has no partial-liquidation cushion; see docs/economics-1k.md section 5.3. Reported to this snapshot by the architecture worker on 2026-10-21 and verified against the sources above."
+      }
+    }
+  },
+  "sourcesIndex": [
+    "https://github.com/aave-dao/aave-v3-origin/blob/main/src/contracts/protocol/libraries/logic/LiquidationLogic.sol",
+    "https://github.com/aave-dao/aave-v3-origin/blob/main/docs/3.3/Aave-v3.3-features.md",
+    "https://aave.com/help/borrowing/liquidations",
+    "https://governance.aave.com/t/bgd-aave-v3-3-feat-umbrella/20129",
+    "https://vote.onaave.com/proposal/?ipfsHash=0x13c4f9441574b90e2210e9ca94a8632ba9d997eca6af66283932d3131d642894&proposalId=252",
+    "https://github.com/aave-dao/aave-v3-origin/releases",
+    "https://lido.fi/how-lido-works/apr-and-rewards-calculator",
+    "https://chartegy.com/data/series/LIDO_STAKING_RATE",
+    "https://rocketpool.net/liquid-staking/what-can-i-earn",
+    "https://growyourethereum.com/data/ethereum-staking-apr-history",
+    "https://www.coinbase.com/earn/staking/coinbase-wrapped-staked-eth",
+    "https://defillama.com/protocol/coinbase-wrapped-staked-eth",
+    "https://www.defi.garden/pools/jito-liquid-staking-jitosol-solana",
+    "https://aavetracker.com/markets/ethereum/weth/",
+    "https://aavetracker.com/markets/ethereum/wsteth/",
+    "https://aavescan.com/ethereum-v3/weth",
+    "https://aavescan.com/ethereum-v3/wsteth",
+    "https://dash.tools.aave.com/reserve/1-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2-aave-v3/",
+    "https://aavetracker.com/markets/arbitrum/weth/",
+    "https://aavetracker.com/markets/arbitrum/wsteth/",
+    "https://aavetracker.com/markets/base/",
+    "https://aavetracker.com/markets/base/wsteth/",
+    "https://aavetracker.com/markets/base/cbeth/",
+    "https://aavescan.com/base-v3/weth",
+    "https://governance.aave.com/t/risk-stewards-september-2026-weth-interest-rate-adjustment-on-base/25667",
+    "https://governance.aave.com/t/arfc-lrt-and-wsteth-unification/21739",
+    "https://app.aave.com/markets/?marketName=proto_mainnet_v3",
+    "https://hyperliquid.gitbook.io/hyperliquid-docs/trading/fees",
+    "https://hyperliquid.gitbook.io/Hyperliquid-docs/for-developers/api/error-responses",
+    "https://hyperliquid.gitbook.io/Hyperliquid-docs/for-developers/api/usdc",
+    "https://hyperliquid-co.gitbook.io/wiki/architecture/hypercore/bridge",
+    "https://usekeel.io/lab/hyperliquid-data",
+    "https://usekeel.io/lab/funding-leaderboard",
+    "https://coinliqui.com/funding/eth",
+    "https://cryptocurrencyhistory.com/coins/eth/funding-rate-history/",
+    "https://fluxy.io/blog/perp-funding-almanac-2020-2026",
+    "https://etherscan.io/gastracker",
+    "https://logicencoder.com/ethereum-gas-price-history/",
+    "https://gasnow.tools/gas-history/ethereum.html",
+    "https://growyourethereum.com/data/ethereum-gas-price-history",
+    "https://github.com/aave-dao/aave-v3-origin/blob/v3.2.0/docs/3.2/3.1_3.2_gas-diff.md",
+    "https://l2gastracker.com/stats",
+    "https://l2gastracker.com/blog/aave-fees-on-base-arbitrum",
+    "https://openchainbench.com/compare/arbitrum-vs-base",
+    "https://dexrabbit.bitquery.io/eth/pool/0x109830a1aaad605bbf02a9dfa7b0b92ec2fb7daa",
+    "https://dexrabbit.bitquery.io/arbitrum/pool/0x35218a1cbac5bbc3e57fd9bd38219d37571b3537",
+    "https://lpsignal.app/pairs/WETH-wstETH",
+    "https://defi-terminal.com/earn/pool/474",
+    "https://stable.fish/defi/1184",
+    "https://themultimesh.com/blog/bridge-to-arbitrum",
+    "https://www.coinbase.com/blog/were-lowering-fees-for-many-active-traders-on-coinbase-advanced",
+    "https://www.coinbase.com/advanced-vip",
+    "https://help.coinbase.com/en/coinbase/trading-and-funding/pricing-and-fees/fees",
+    "https://help.coinbase.com/en/international-exchange/trading-deposits-withdrawals/network-fees",
+    "https://gasfeepredictor.com/coinbase-usdc-withdrawal-fee",
+    "https://themultimesh.com/blog/coinbase-to-l2"
+  ]
+}
