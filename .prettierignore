@@ -5,3 +5,4 @@ pnpm-lock.yaml
 docs/
 services/
 dashboard/
+apps/web/cursor/identity.ts

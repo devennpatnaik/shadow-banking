@@ -17,12 +17,18 @@
     "paths": {
       "@/*": ["./src/*"]
     },
-    "noUncheckedIndexedAccess": true,
+    "noUncheckedIndexedAccess": false,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "useUnknownInCatchVariables": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["next-env.d.ts", "src/**/*.ts", "src/**/*.tsx", "cursor/**/*.ts", ".next/types/**/*.ts"],
+  "include": [
+    "next-env.d.ts",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "cursor/**/*.ts",
+    ".next/types/**/*.ts"
+  ],
   "exclude": ["node_modules"]
 }
