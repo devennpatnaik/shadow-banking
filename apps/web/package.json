@@ -1,0 +1,35 @@
+{
+  "name": "@shadow-banking/web",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Private signed-in paper book for Shadow Banking (Cursor publish-app). Propose/approve only; no broadcast.",
+  "type": "module",
+  "scripts": {
+    "dev": "next dev --port 3000",
+    "build": "next build && node scripts/migrate.mjs",
+    "start": "next start --port 3000",
+    "typecheck": "tsc -p tsconfig.json",
+    "migrate": "node scripts/migrate.mjs"
+  },
+  "dependencies": {
+    "@electric-sql/pglite": "^0.3.7",
+    "@shadow-banking/accounting": "workspace:*",
+    "@shadow-banking/controller": "workspace:*",
+    "@shadow-banking/core": "workspace:*",
+    "@shadow-banking/execution": "workspace:*",
+    "@shadow-banking/risk": "workspace:*",
+    "@shadow-banking/strategy": "workspace:*",
+    "next": "^15.5.4",
+    "pg": "^8.16.3",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "server-only": "^0.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.18.0",
+    "@types/pg": "^8.15.5",
+    "@types/react": "^19.1.15",
+    "@types/react-dom": "^19.1.9",
+    "typescript": "^5.9.3"
+  }
+}

@@ -37,6 +37,11 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
+      - name: Web app typecheck and build (PGlite, no DATABASE_URL)
+        run: |
+          env -u DATABASE_URL pnpm --filter @shadow-banking/web typecheck
+          env -u DATABASE_URL pnpm --filter @shadow-banking/web build
+
       - name: Lint
         run: pnpm lint
 
