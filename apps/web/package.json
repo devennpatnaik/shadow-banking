@@ -4,6 +4,12 @@
   "private": true,
   "description": "Private signed-in paper book for Shadow Banking (Cursor publish-app). Propose/approve only; no broadcast.",
   "type": "module",
+  "imports": {
+    "#cursor/identity": {
+      "types": "./src/lib/cursor-identity.d.ts",
+      "default": "./cursor/identity.ts"
+    }
+  },
   "scripts": {
     "dev": "next dev --port 3000",
     "build": "next build && node scripts/migrate.mjs",

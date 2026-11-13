@@ -1,7 +1,7 @@
 import 'server-only';
 import { headers } from 'next/headers';
-import { getIdentity, requireIdentity } from '../../cursor/identity';
-import type { VerifiedIdentity } from '../../cursor/identity';
+import { getIdentity, requireIdentity } from '#cursor/identity';
+import type { VerifiedIdentity } from '#cursor/identity';
 
 export { getIdentity, requireIdentity };
 export type { VerifiedIdentity };
